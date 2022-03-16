@@ -8,8 +8,22 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
+        <PackageReference Include="System.Memory" Version="4.5.4" />
+    </ItemGroup>
+
     <ItemGroup>
       <PackageReference Include="Dommel" Version="3.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Dommel.Bulk.Benchmarks</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="TypeMap\QuotedTypeMapper.cs" />
     </ItemGroup>
 
 </Project>

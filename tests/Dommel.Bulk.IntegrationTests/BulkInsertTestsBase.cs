@@ -3,9 +3,11 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Bogus;
 using Bogus.DataSets;
+using Dommel.Bulk.TypeMap;
 using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
@@ -35,6 +37,9 @@ public abstract class BulkInsertTestsBase
         var people = Enumerable.Range(0, 20)
             .Select(x => personGenerator.Generate())
             .ToArray();
+
+        Expression<Func<Person, string>> expr = person =>
+                $"({DommelBulkMapper.GetTypeMapper(person.Ref.GetType()).Map(person.Ref)}, {DommelBulkMapper.GetTypeMapper(person.FirstName.GetType()).Map(person.FirstName)}, {DommelBulkMapper.GetTypeMapper(person.LastName.GetType()).Map(person.LastName)}, {DommelBulkMapper.GetTypeMapper(person.Age.GetType()).Map(person.Age)}, {DommelBulkMapper.GetTypeMapper(person.Gender.GetType()).Map(person.Gender)}, {DommelBulkMapper.GetTypeMapper(person.BirthDay.GetType()).Map(person.BirthDay)})";
 
         Person[] peopleFromDb;
 

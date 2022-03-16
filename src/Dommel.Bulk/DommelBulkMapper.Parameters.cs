@@ -5,13 +5,12 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Dapper;
 using Dommel.Bulk.Extensions;
+using Dommel.Bulk.TypeMap;
 
 namespace Dommel.Bulk;
 
-public static class DommelBulkMapper
+public static partial class DommelBulkMapper
 {
-    private static ConcurrentDictionary<string, string> QueryCache { get; } = new ConcurrentDictionary<string, string>();
-
     /// <summary>
     /// Bulk inserts the specified collection of entities into the database.
     /// </summary>
@@ -20,10 +19,10 @@ public static class DommelBulkMapper
     /// <param name="entities">The entities to be inserted.</param>
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <returns>The number of rows affected.</returns>
-    public static int Insert<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null)
+    public static int BulkInsertParameters<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null)
         where TEntity : class
     {
-        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
+        var sql = BuildInsertParametersQuery(DommelMapper.GetSqlBuilder(connection), entities);
         LogQuery<TEntity>(sql.Query);
         return connection.Execute(sql.Query, sql.Parameters, transaction);
     }
@@ -37,10 +36,10 @@ public static class DommelBulkMapper
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <param name="cancellationToken">Optional cancellation token for the command.</param>
     /// <returns>The number of rows affected.</returns>
-    public static Task<int> BulkInsertAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public static Task<int> BulkInsertParametersAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
         where TEntity : class
     {
-        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
+        var sql = BuildInsertParametersQuery(DommelMapper.GetSqlBuilder(connection), entities);
         LogQuery<TEntity>(sql.Query);
         return connection.ExecuteAsync(new CommandDefinition(sql.Query, sql.Parameters, transaction: transaction, cancellationToken: cancellationToken));
     }
@@ -48,7 +47,7 @@ public static class DommelBulkMapper
     private static void LogQuery<T>(string query, [CallerMemberName] string? method = null)
         => DommelMapper.LogReceived?.Invoke(method != null ? $"{method}<{typeof(T).Name}>: {query}" : query);
 
-    internal static SqlQuery BuildInsertQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
+    internal static SqlQuery BuildInsertParametersQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
     {
         Type type = typeof(T);
 

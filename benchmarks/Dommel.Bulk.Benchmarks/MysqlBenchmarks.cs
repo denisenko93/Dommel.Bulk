@@ -2,22 +2,24 @@
 using Dapper;
 using MySqlConnector;
 
-namespace Dommel.Bulk.IntegrationTests;
+namespace Dommel.Bulk.Benchmarks;
 
-public class MysqlBulkInsertTests : BulkInsertTestsBase
+public class MysqlBenchmarks : DatabaseBenchmarksBase
 {
-    private const string DatabaseName = "dommel_bulk_test";
+    private const string DatabaseName = "dommel_bulk_benchmarks";
 
-    public MysqlBulkInsertTests()
+    public MysqlBenchmarks() : base(GetOpenConnection())
     {
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            connection.Execute($@"drop database if exists {DatabaseName};
+    }
+
+    protected override void SetupDatabase(IDbConnection connection)
+    {
+        connection.Execute($@"drop database if exists {DatabaseName};
             create database {DatabaseName};
             use {DatabaseName};
 
             create table people(
-                id char(36) not null,
+                id int not null auto_increment,
                 first_name varchar(255) not null,
                 last_name varchar(255) not null,
                 gender int not null,
@@ -36,11 +38,16 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase
             BEGIN
                 set NEW.created_on = NOW();
             end;");
-        }
+
+        connection.ChangeDatabase(DatabaseName);
     }
 
-    protected override IDbConnection GetConnection()
+    private static IDbConnection GetOpenConnection()
     {
-        return new MySqlConnection($"Server=localhost;Uid=root;Database={DatabaseName};Pwd=root;UseAffectedRows=false;");
+        MySqlConnection connection = new MySqlConnection($"Server=localhost;Uid=root;Pwd=root;UseAffectedRows=false;");
+
+        connection.Open();
+
+        return connection;
     }
 }

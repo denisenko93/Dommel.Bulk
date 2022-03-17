@@ -19,5 +19,5 @@ public interface ITypeMapper
     /// return Expression interpret map function for type.
     /// </summary>
     /// <returns>Expression interpret map function.</returns>
-    Expression GetExpression();
+    LambdaExpression GetExpression();
 }

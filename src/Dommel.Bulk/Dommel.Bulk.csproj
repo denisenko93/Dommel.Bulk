@@ -23,6 +23,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Dommel.Bulk.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
       <Compile Remove="TypeMap\QuotedTypeMapper.cs" />
     </ItemGroup>
 

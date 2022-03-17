@@ -2,7 +2,7 @@
 
 namespace Dommel.Bulk.TypeMap;
 
-public class ByteArraySegmentTypeMapper : TypeMapperBase<ArraySegment<byte>>
+public class ByteArraySegmentTypeMapper : GenericTypeMapper<ArraySegment<byte>>
 {
     public ByteArraySegmentTypeMapper(string format)
         : base(x => string.Format(format, x.ToHexString()))

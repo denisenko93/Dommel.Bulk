@@ -8,9 +8,15 @@ public class SqlBuilderBenchmarks : BenchmarksBase
     private readonly ISqlBuilder _sqlBuilder = new MySqlSqlBuilder();
 
     [Benchmark]
-    public void SqlBuilderBenchmark()
+    public void SqlBuilderReflectionBenchmark()
     {
         DommelBulkMapper.BuildInsertQueryReflection(_sqlBuilder, data);
+    }
+
+    [Benchmark]
+    public void SqlBuilderExpressionBenchmark()
+    {
+        DommelBulkMapper.BuildInsertQueryExpression(_sqlBuilder, data);
     }
 
     [Benchmark]

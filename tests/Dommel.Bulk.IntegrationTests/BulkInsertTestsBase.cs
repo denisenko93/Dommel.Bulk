@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 using Bogus;
 using Bogus.DataSets;
@@ -42,6 +43,15 @@ public abstract class BulkInsertTestsBase
                 $"({DommelBulkMapper.GetTypeMapper(person.Ref.GetType()).Map(person.Ref)}, {DommelBulkMapper.GetTypeMapper(person.FirstName.GetType()).Map(person.FirstName)}, {DommelBulkMapper.GetTypeMapper(person.LastName.GetType()).Map(person.LastName)}, {DommelBulkMapper.GetTypeMapper(person.Age.GetType()).Map(person.Age)}, {DommelBulkMapper.GetTypeMapper(person.Gender.GetType()).Map(person.Gender)}, {DommelBulkMapper.GetTypeMapper(person.BirthDay.GetType()).Map(person.BirthDay)})";
 
         Person[] peopleFromDb;
+
+        ParameterExpression parameter = Expression.Parameter(typeof(Person));
+        var stringFormatMethod = typeof(string).GetMethod("Format", BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod);
+
+
+
+        Expression.Lambda(
+            Expression.Call(stringFormatMethod, Expression.Constant(""), Expression.NewArrayInit(typeof(string[]), new[])),
+            parameter)
 
         using (IDbConnection connection = GetOpenConnection())
         {

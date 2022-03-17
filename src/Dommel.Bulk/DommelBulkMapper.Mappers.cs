@@ -10,33 +10,31 @@ namespace Dommel.Bulk;
 
 public static partial class DommelBulkMapper
 {
-    private static readonly ITypeMapper EnumTypeMapper = new FormatTypeMapper("d");
-    private static readonly ITypeMapper NullTypeMapper = new NullTypeMapper();
+    private static readonly ITypeMapper EnumTypeMapper = new FormatTypeMapper<Enum>("d");
     private static Dictionary<Type, ITypeMapper> TypeMappers { get; } = new Dictionary<Type, ITypeMapper>
     {
         [typeof(bool)] = new BoolTypeMapper(),
-        [typeof(byte)] = new FormatTypeMapper("D"),
-        [typeof(char)] = new FormatTypeMapper(null, quote:"'", escape: true),
-        [typeof(double)] = new FormatTypeMapper("G17"),
-        [typeof(float)] = new FormatTypeMapper("G9"),
-        [typeof(int)] = new FormatTypeMapper("D"),
-        [typeof(long)] = new FormatTypeMapper("D"),
-        [typeof(sbyte)] = new FormatTypeMapper("D"),
-        [typeof(short)] = new FormatTypeMapper("D"),
-        [typeof(uint)] = new FormatTypeMapper("D"),
-        [typeof(ulong)] = new FormatTypeMapper("D"),
-        [typeof(ushort)] = new FormatTypeMapper("D"),
-        [typeof(decimal)] = new FormatTypeMapper("G"),
-        [typeof(decimal)] = new FormatTypeMapper("D"),
-        [typeof(DateTime)] = new FormatTypeMapper("yyyy-MM-dd HH:mm:ss.ffffff", quote: "'"),
-        [typeof(Guid)] = new FormatTypeMapper("D", quote: "'"),
-        [typeof(string)] = new FormatTypeMapper(null, quote: "'", escape: true),
+        [typeof(byte)] = new FormatTypeMapper<byte>("D"),
+        [typeof(char)] = new GenericTypeMapper<char>(x => $"'{x}'".Escape()),
+        [typeof(double)] = new FormatTypeMapper<double>("G17"),
+        [typeof(float)] = new FormatTypeMapper<float>("G9"),
+        [typeof(int)] = new FormatTypeMapper<int>("D"),
+        [typeof(long)] = new FormatTypeMapper<long>("D"),
+        [typeof(sbyte)] = new FormatTypeMapper<sbyte>("D"),
+        [typeof(short)] = new FormatTypeMapper<short>("D"),
+        [typeof(uint)] = new FormatTypeMapper<uint>("D"),
+        [typeof(ulong)] = new FormatTypeMapper<ulong>("D"),
+        [typeof(ushort)] = new FormatTypeMapper<ushort>("D"),
+        [typeof(decimal)] = new FormatTypeMapper<decimal>("G"),
+        [typeof(DateTime)] = new FormatTypeMapper<DateTime>("yyyy-MM-dd HH:mm:ss.ffffff", quote: "'"),
+        [typeof(Guid)] = new FormatTypeMapper<Guid>("D", quote: "'"),
+        [typeof(string)] = new GenericTypeMapper<string>(x => $"'{x.Escape()}'"),
         [typeof(TimeSpan)] = new TimeSpanTimeMapper(),
         [typeof(ArraySegment<byte>)] = new ByteArraySegmentTypeMapper("0x{0}"),
         [typeof(byte[])] = new ByteArrayTypeMapper("0x{0}"),
 #if NET6_0_OR_GREATER
-        [typeof(DateOnly)] = new FormatTypeMapper("yyyy-MM-dd", quote:"'"),
-        [typeof(TimeOnly)] = new FormatTypeMapper("HH:mm:ss.ffffff", quote:"'"),
+        [typeof(DateOnly)] = new FormatTypeMapper<DateOnly>("yyyy-MM-dd", quote:"'"),
+        [typeof(TimeOnly)] = new FormatTypeMapper<TimeOnly>("HH:mm:ss.ffffff", quote:"'"),
 #endif
     };
 
@@ -157,20 +155,48 @@ public static partial class DommelBulkMapper
 
         int line = 1;
 
+        string format = $"({string.Join(", ", Enumerable.Range(0, typeProperties.Length).Select(x => $"{{{x}}}"))})";
+
+        ParameterExpression parameter = Expression.Parameter(typeof(T));
+        var stringFormatMethod = typeof(string).GetMethod("Format", new []{typeof(string), typeof(object[])});
+
+        IEnumerable<Expression> expressions = typeProperties
+            .Select(x =>
+            {
+                ITypeMapper typeMapper = GetTypeMapper(x.PropertyType);
+
+                LambdaExpression expression = typeMapper.GetExpression();
+
+                Type typeMapperParameterType = expression.Parameters[0].Type;
+
+                Expression property = x.PropertyType == typeMapperParameterType
+                    ? Expression.Property(parameter, x)
+                    : Expression.Convert(Expression.Property(parameter, x), typeMapperParameterType);
+
+                if (!x.PropertyType.IsValueType || (x.PropertyType.IsGenericType && x.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>)))
+                {
+                    ParameterExpression parameter = Expression.Parameter(x.PropertyType, "value");
+
+                    expression = Expression.Lambda(
+                        Expression.Condition(
+                            Expression.Equal(parameter, Expression.Constant(null)),
+                            Expression.Constant(Constants.NullStr),
+                            Expression.Invoke(typeMapper.GetExpression(), parameter)),
+                        parameter);
+                }
+
+                return Expression.Invoke(expression, property);
+            });
+
+        var lambdaExpression = Expression.Lambda<Func<T, string>>(
+            Expression.Call(stringFormatMethod, Expression.Constant(format), Expression.NewArrayInit(typeof(string), expressions)),
+            parameter);
+
+        var func = lambdaExpression.Compile();
+
         foreach (T entity in entities)
         {
-            string format = $"({string.Join(", ", Enumerable.Range(0, typeProperties.Length).Select(x => $"{{{x}}}"))})";
-
-            sb.Append('(');
-
-            foreach (PropertyInfo typeProperty in typeProperties)
-            {
-                ITypeMapper typeMapper = GetTypeMapper(typeProperty.PropertyType);
-
-                sb.Append($"{typeMapper.Map(typeProperty.GetValue(entity))}, ");
-            }
-
-            sb.Remove(sb.Length - 2, 2);
+            sb.Append(func(entity));
 
             sb.AppendLine("),");
             line++;

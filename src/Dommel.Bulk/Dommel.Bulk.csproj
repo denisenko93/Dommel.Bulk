@@ -11,6 +11,7 @@
         <Description>Bulk insert for Dapper.</Description>
         <PackageTags>dommel;bulk;insert;dapper;database;orm</PackageTags>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">

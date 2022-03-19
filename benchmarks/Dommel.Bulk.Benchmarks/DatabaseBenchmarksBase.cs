@@ -13,9 +13,8 @@ public abstract class DatabaseBenchmarksBase : BenchmarksBase
         _connection = connection;
     }
 
-   // [Params(10, 100, 1_000, 10_000, 20_000, 50_000, 100_000, 500_000, 1_000_000)]
-    [Params(10_000)]
-    public int ChunkSize { get; set; }
+    [Params(1000)]
+    public override int DataSize { get; set; }
 
     public override void Setup()
     {
@@ -27,55 +26,19 @@ public abstract class DatabaseBenchmarksBase : BenchmarksBase
     [Benchmark]
     public async Task BulkInsertBenchmarkAsync()
     {
-        foreach (var dataChunk in data.Chunk(ChunkSize))
-        {
-            await _connection.BulkInsertAsync(dataChunk);
-        }
+        await _connection.BulkInsertAsync(data);
     }
 
     [Benchmark]
-    public void BulkInsertBenchmark()
+    public async Task BulkInsertParametersBenchmarkAsync()
     {
-        foreach (var dataChunk in data.Chunk(ChunkSize))
-        {
-             _connection.BulkInsert(dataChunk);
-        }
+        await _connection.BulkInsertParametersAsync(data);
     }
 
     [Benchmark(Baseline = true)]
-    public async Task BulkInsertParametersBenchmarkAsync()
+    public async Task InsertAllBenchmarkAsync()
     {
-        foreach (var dataChunk in data.Chunk(ChunkSize))
-        {
-            await _connection.BulkInsertParametersAsync(dataChunk);
-        }
-    }
-
-    [Benchmark]
-    public void BulkInsertParametersBenchmark()
-    {
-        foreach (var dataChunk in data.Chunk(ChunkSize))
-        {
-            _connection.BulkInsertParameters(dataChunk);
-        }
-    }
-
-    //[Benchmark]
-    public async Task InsertBenchmarkAsync()
-    {
-        foreach (var dataChunk in data.Chunk(ChunkSize))
-        {
-            await _connection.InsertAllAsync(dataChunk);
-        }
-    }
-
-    //[Benchmark]
-    public void InsertBenchmark()
-    {
-        foreach (var dataChunk in data.Chunk(ChunkSize))
-        {
-            _connection.InsertAll(dataChunk);
-        }
+        await _connection.InsertAllAsync(data);
     }
 
     [GlobalCleanup]

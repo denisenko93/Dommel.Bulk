@@ -6,8 +6,6 @@ namespace Dommel.Bulk.IntegrationTests;
 
 public class MysqlBulkInsertTests : BulkInsertTestsBase
 {
-    private const string DatabaseName = "dommel_bulk_test";
-
     public MysqlBulkInsertTests()
     {
         using (IDbConnection connection = GetOpenConnection())
@@ -17,7 +15,8 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase
             use {DatabaseName};
 
             create table people(
-                id char(36) not null,
+                id int not null auto_increment,
+                ref char(36) not null,
                 first_name varchar(255) not null,
                 last_name varchar(255) not null,
                 gender int not null,
@@ -41,6 +40,6 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase
 
     protected override IDbConnection GetConnection()
     {
-        return new MySqlConnection($"Server=localhost;Uid=root;Database={DatabaseName};Pwd=root;UseAffectedRows=false;");
+        return new MySqlConnection($"Server=localhost;Uid=root;Pwd=root;UseAffectedRows=false;");
     }
 }

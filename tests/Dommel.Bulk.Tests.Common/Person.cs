@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Bogus.DataSets;
 
-namespace Dommel.Bulk.Benchmarks.TestData;
+namespace Dommel.Bulk.Tests.Common;
 
 [Table("people")]
 public class Person
@@ -10,6 +10,9 @@ public class Person
     [Key]
     [Column("id")]
     public int Id { get; set; }
+
+    [Column("ref")]
+    public Guid Ref { get; set; }
 
     [Column("first_name")]
     public string FirstName { get; set; }

@@ -1,57 +1,34 @@
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading.Tasks;
-using Bogus;
-using Bogus.DataSets;
-using Dommel.Bulk.TypeMap;
+using Dommel.Bulk.Tests.Common;
 using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
 
 public abstract class BulkInsertTestsBase
 {
+    protected const string DatabaseName = "dommel_bulk_test";
+
     protected abstract IDbConnection GetConnection();
 
     protected IDbConnection GetOpenConnection()
     {
         var connection = GetConnection();
         connection.Open();
+        connection.ChangeDatabase(DatabaseName);
         return connection;
     }
 
     [Fact]
-    public async Task InsertSampleDataTestAsync()
+    public async Task BulkInsertTestAsync()
     {
-        var personGenerator = new Faker<Person>()
-            .RuleFor(x => x.Ref, () => Guid.NewGuid())
-            .RuleFor(x => x.FirstName, f => f.Person.FirstName)
-            .RuleFor(x => x.LastName, f => f.Person.LastName)
-            .RuleFor(x => x.Age, f => f.Person.Random.Number(100))
-            .RuleFor(x => x.Gender, f => f.Person.Gender)
-            .RuleFor(x => x.BirthDay, f => f.Person.DateOfBirth);
-
         var people = Enumerable.Range(0, 20)
-            .Select(x => personGenerator.Generate())
+            .Select(_ => FakeGenerators.PersonFaker.Generate())
             .ToArray();
 
-        Expression<Func<Person, string>> expr = person =>
-                $"({DommelBulkMapper.GetTypeMapper(person.Ref.GetType()).Map(person.Ref)}, {DommelBulkMapper.GetTypeMapper(person.FirstName.GetType()).Map(person.FirstName)}, {DommelBulkMapper.GetTypeMapper(person.LastName.GetType()).Map(person.LastName)}, {DommelBulkMapper.GetTypeMapper(person.Age.GetType()).Map(person.Age)}, {DommelBulkMapper.GetTypeMapper(person.Gender.GetType()).Map(person.Gender)}, {DommelBulkMapper.GetTypeMapper(person.BirthDay.GetType()).Map(person.BirthDay)})";
-
         Person[] peopleFromDb;
-
-        ParameterExpression parameter = Expression.Parameter(typeof(Person));
-        var stringFormatMethod = typeof(string).GetMethod("Format", BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod);
-
-
-
-        Expression.Lambda(
-            Expression.Call(stringFormatMethod, Expression.Constant(""), Expression.NewArrayInit(typeof(string[]), new[])),
-            parameter)
 
         using (IDbConnection connection = GetOpenConnection())
         {
@@ -64,10 +41,11 @@ public abstract class BulkInsertTestsBase
 
         foreach (Person person in people)
         {
-            var personFromDb = peopleFromDb.FirstOrDefault(x => x.Ref == person.Ref);
+            var personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
 
             Assert.NotNull(personFromDb);
 
+            Assert.NotEqual(0, personFromDb.Id);
             Assert.Equal(person.Ref, personFromDb.Ref);
             Assert.Equal(person.FirstName, personFromDb.FirstName);
             Assert.Equal(person.LastName, personFromDb.LastName);
@@ -78,36 +56,112 @@ public abstract class BulkInsertTestsBase
             Assert.NotNull(personFromDb.FullName);
         }
     }
-}
 
-[Table("people")]
-public class Person
-{
-    [Key]
-    [Column("id")]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
-    public Guid? Ref { get; set; }
+    [Fact]
+    public void BulkInsertTest()
+    {
+        var people = Enumerable.Range(0, 20)
+            .Select(_ => FakeGenerators.PersonFaker.Generate())
+            .ToArray();
 
-    [Column("first_name")]
-    public string FirstName { get; set; }
+        Person[] peopleFromDb;
 
-    [Column("last_name")]
-    public string LastName { get; set; }
+        using (IDbConnection connection = GetOpenConnection())
+        {
+            connection.DeleteAll<Person>();
 
-    [Column("gender")]
-    public Name.Gender Gender { get; set; }
+            connection.BulkInsert(people);
 
-    [Column("age")]
-    public int Age { get; set; }
+            peopleFromDb = connection.GetAll<Person>().ToArray();
+        }
 
-    [Column("birth_day")]
-    public DateTime BirthDay { get; set; }
+        foreach (Person person in people)
+        {
+            var personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
 
-    [Column("created_on")]
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    public DateTime? CreatedOn { get; set; }
+            Assert.NotNull(personFromDb);
 
-    [Column("full_name")]
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    public string FullName { get; set; }
+            Assert.NotEqual(0, personFromDb.Id);
+            Assert.Equal(person.Ref, personFromDb.Ref);
+            Assert.Equal(person.FirstName, personFromDb.FirstName);
+            Assert.Equal(person.LastName, personFromDb.LastName);
+            Assert.Equal(person.Age, personFromDb.Age);
+            Assert.Equal(person.Gender, personFromDb.Gender);
+            Assert.Equal(person.BirthDay, personFromDb.BirthDay, TimeSpan.FromSeconds(2));
+            Assert.NotNull(personFromDb.CreatedOn);
+            Assert.NotNull(personFromDb.FullName);
+        }
+    }
+
+    [Fact]
+    public async Task BulkInsertParametersTestAsync()
+    {
+        var people = Enumerable.Range(0, 20)
+            .Select(_ => FakeGenerators.PersonFaker.Generate())
+            .ToArray();
+
+        Person[] peopleFromDb;
+
+        using (IDbConnection connection = GetOpenConnection())
+        {
+            await connection.DeleteAllAsync<Person>();
+
+            await connection.BulkInsertParametersAsync(people);
+
+            peopleFromDb = (await connection.GetAllAsync<Person>()).ToArray();
+        }
+
+        foreach (Person person in people)
+        {
+            var personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
+
+            Assert.NotNull(personFromDb);
+
+            Assert.NotEqual(0, personFromDb.Id);
+            Assert.Equal(person.Ref, personFromDb.Ref);
+            Assert.Equal(person.FirstName, personFromDb.FirstName);
+            Assert.Equal(person.LastName, personFromDb.LastName);
+            Assert.Equal(person.Age, personFromDb.Age);
+            Assert.Equal(person.Gender, personFromDb.Gender);
+            Assert.Equal(person.BirthDay, personFromDb.BirthDay, TimeSpan.FromSeconds(2));
+            Assert.NotNull(personFromDb.CreatedOn);
+            Assert.NotNull(personFromDb.FullName);
+        }
+    }
+
+    [Fact]
+    public void BulkInsertParametersTest()
+    {
+        var people = Enumerable.Range(0, 20)
+            .Select(_ => FakeGenerators.PersonFaker.Generate())
+            .ToArray();
+
+        Person[] peopleFromDb;
+
+        using (IDbConnection connection = GetOpenConnection())
+        {
+            connection.DeleteAll<Person>();
+
+            connection.BulkInsertParameters(people);
+
+            peopleFromDb = connection.GetAll<Person>().ToArray();
+        }
+
+        foreach (Person person in people)
+        {
+            var personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
+
+            Assert.NotNull(personFromDb);
+
+            Assert.NotEqual(0, personFromDb.Id);
+            Assert.Equal(person.Ref, personFromDb.Ref);
+            Assert.Equal(person.FirstName, personFromDb.FirstName);
+            Assert.Equal(person.LastName, personFromDb.LastName);
+            Assert.Equal(person.Age, personFromDb.Age);
+            Assert.Equal(person.Gender, personFromDb.Gender);
+            Assert.Equal(person.BirthDay, personFromDb.BirthDay, TimeSpan.FromSeconds(2));
+            Assert.NotNull(personFromDb.CreatedOn);
+            Assert.NotNull(personFromDb.FullName);
+        }
+    }
 }

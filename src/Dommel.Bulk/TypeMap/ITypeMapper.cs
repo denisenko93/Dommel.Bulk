@@ -9,13 +9,6 @@ namespace Dommel.Bulk.TypeMap;
 public interface ITypeMapper
 {
     /// <summary>
-    /// Resolves string value for the specified value.
-    /// </summary>
-    /// <param name="value">The value to resolve string for.</param>
-    /// <returns>A string interpretation of <paramref name="value"/>.</returns>
-    string Map(object value);
-
-    /// <summary>
     /// return Expression interpret map function for type.
     /// </summary>
     /// <returns>Expression interpret map function.</returns>

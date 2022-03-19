@@ -89,6 +89,7 @@ public class AllTypesEntity
 
     public TimeSpan? TimeSpanNull { get; set; }
 
+#if NET6_0_OR_GREATER
     public DateOnly DateOnly { get; set; }
 
     public DateOnly? DateOnlyNull { get; set; }
@@ -96,6 +97,7 @@ public class AllTypesEntity
     public TimeOnly TimeOnly { get; set; }
 
     public TimeOnly? TimeOnlyNull { get; set; }
+#endif
 
     // binary types
     public byte[] ByteArray { get; set; }

@@ -1,10 +1,12 @@
 ﻿using System.Data;
 using BenchmarkDotNet.Attributes;
-using Bogus;
+using BenchmarkDotNet.Configs;
+using Dommel.Bulk.Tests.Common;
 
 namespace Dommel.Bulk.Benchmarks;
 
-public abstract class DatabaseBenchmarksBase : BenchmarksBase
+[GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory), CategoriesColumn]
+public abstract class DatabaseBenchmarksBase : SqlBuilderBenchmarks
 {
     private IDbConnection _connection;
 
@@ -13,7 +15,7 @@ public abstract class DatabaseBenchmarksBase : BenchmarksBase
         _connection = connection;
     }
 
-    [Params(1000)]
+    [Params(100_000)]
     public override int DataSize { get; set; }
 
     public override void Setup()
@@ -23,19 +25,19 @@ public abstract class DatabaseBenchmarksBase : BenchmarksBase
         base.Setup();
     }
 
-    [Benchmark]
+    [Benchmark(Baseline = true), BenchmarkCategory("simple")]
     public async Task BulkInsertBenchmarkAsync()
     {
         await _connection.BulkInsertAsync(data);
     }
 
-    [Benchmark]
+    [Benchmark(Baseline = true), BenchmarkCategory("parameters")]
     public async Task BulkInsertParametersBenchmarkAsync()
     {
         await _connection.BulkInsertParametersAsync(data);
     }
 
-    [Benchmark(Baseline = true)]
+    // [Benchmark(Baseline = true)]
     public async Task InsertAllBenchmarkAsync()
     {
         await _connection.InsertAllAsync(data);

@@ -13,7 +13,7 @@ public static class FakeGenerators
             .RuleFor(x => x.BirthDay, f => f.Person.DateOfBirth);
 
     public static readonly Faker<AllTypesEntity> AllTypesFaker = new Faker<AllTypesEntity>()
-       // .StrictMode(true)
+        .StrictMode(true)
         .RuleFor(x => x.Id, f => f.Random.Guid())
         .RuleFor(x => x.Ref, f => f.Random.Guid())
         .RuleFor(x => x.Short, f => f.Random.Short())
@@ -52,13 +52,15 @@ public static class FakeGenerators
         .RuleFor(x => x.DateTimeOffsetNull, f => f.Date.FutureOffset().OrNull(f))
         .RuleFor(x => x.TimeSpan, f => f.Date.Timespan())
         .RuleFor(x => x.TimeSpanNull, f => f.Date.Timespan().OrNull(f))
-        .RuleFor(x => x.DateOnly, f => f.Date.RecentDateOnly())
+#if NET6_0_OR_GREATER
+       .RuleFor(x => x.DateOnly, f => f.Date.RecentDateOnly())
         .RuleFor(x => x.DateOnlyNull, f => f.Date.FutureDateOnly().OrNull(f))
         .RuleFor(x => x.TimeOnly, f => f.Date.RecentTimeOnly())
         .RuleFor(x => x.TimeOnlyNull, f => f.Date.RecentTimeOnly())
+#endif
         .RuleFor(x => x.ByteArray, f => f.Random.Bytes(1000).OrNull(f))
         .RuleFor(x => x.ByteArrayNull, f => f.Random.Bytes(1000).OrNull(f))
-        .RuleFor(x => x.ByteArraySegment, f => f.Random.Bytes(1000).OrNull(f))
-        .RuleFor(x => x.ByteArraySegmentNull, f => f.Random.Bytes(1000).OrNull(f))
+        .RuleFor(x => x.ByteArraySegment, f => new ArraySegment<byte>(f.Random.Bytes(1000)))
+        .RuleFor(x => x.ByteArraySegmentNull, f => new ArraySegment<byte>(f.Random.Bytes(1000)).OrNull(f))
         ;
 }

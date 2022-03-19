@@ -20,6 +20,7 @@ public class MysqlBenchmarks : DatabaseBenchmarksBase
 
             create table people(
                 id int not null auto_increment,
+                ref char(36) not null,
                 first_name varchar(255) not null,
                 last_name varchar(255) not null,
                 gender int not null,

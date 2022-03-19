@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,7 +11,8 @@ namespace Dommel.Bulk;
 
 public static partial class DommelBulkMapper
 {
-    private static readonly ITypeMapper EnumTypeMapper = new FormatTypeMapper<Enum>("d");
+    private static readonly ConcurrentDictionary<SqlBuilderCacheKey, object> StringBuilderFuncCache = new ConcurrentDictionary<SqlBuilderCacheKey, object>();
+
     private static Dictionary<Type, ITypeMapper> TypeMappers { get; } = new Dictionary<Type, ITypeMapper>
     {
         [typeof(bool)] = new BoolTypeMapper(),
@@ -35,6 +35,7 @@ public static partial class DommelBulkMapper
         [typeof(TimeSpan)] = new TimeSpanTimeMapper(),
         [typeof(ArraySegment<byte>)] = new ByteArraySegmentTypeMapper("0x{0}"),
         [typeof(byte[])] = new ByteArrayTypeMapper("0x{0}"),
+        [typeof(Enum)] = new FormatTypeMapper<Enum>("d"),
 #if NET6_0_OR_GREATER
         [typeof(DateOnly)] = new FormatTypeMapper<DateOnly>("yyyy-MM-dd", quote:"'"),
         [typeof(TimeOnly)] = new FormatTypeMapper<TimeOnly>("HH:mm:ss.ffffff", quote:"'"),
@@ -63,7 +64,7 @@ public static partial class DommelBulkMapper
     public static int BulkInsert<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null)
         where TEntity : class
     {
-        var sql = BuildInsertQueryReflection(DommelMapper.GetSqlBuilder(connection), entities);
+        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
         LogQuery<TEntity>(sql);
         return connection.Execute(sql, transaction);
     }
@@ -80,124 +81,12 @@ public static partial class DommelBulkMapper
     public static Task<int> BulkInsertAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
         where TEntity : class
     {
-        var sql = BuildInsertQueryReflection(DommelMapper.GetSqlBuilder(connection), entities);
+        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
         LogQuery<TEntity>(sql);
         return connection.ExecuteAsync(new CommandDefinition(sql, transaction: transaction, cancellationToken: cancellationToken));
     }
 
-    internal static string BuildInsertQueryReflection<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
-    {
-        Type type = typeof(T);
-
-        var tableName = Resolvers.Table(type, sqlBuilder);
-
-        // Use all non-key and non-generated properties for inserts
-        var keyProperties = Resolvers.KeyProperties(type);
-        var typeProperties = Resolvers.Properties(type)
-            .Where(x => !x.IsGenerated)
-            .Select(x => x.Property)
-            .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property))
-            .ToArray();
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.AppendFormat("INSERT INTO {0} (", tableName);
-
-        var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder, false));
-
-        sb.AppendJoin(", ", columnNames);
-        sb.AppendLine(") VALUES");
-
-        int line = 1;
-
-        foreach (T entity in entities)
-        {
-            sb.Append('(');
-
-            foreach (PropertyInfo typeProperty in typeProperties)
-            {
-                object value = typeProperty.GetValue(entity);
-
-                if (value == null)
-                {
-                    sb.Append($"{Constants.NullStr}, ");
-                }
-                else
-                {
-                    ITypeMapper typeMapper = GetTypeMapper(typeProperty.PropertyType);
-
-                    sb.Append($"{typeMapper.Map(typeProperty.GetValue(entity))}, ");
-                }
-            }
-
-            sb.Remove(sb.Length - 2, 2);
-
-            sb.AppendLine("),");
-            line++;
-        }
-
-        sb.Remove(sb.Length - 3, 3);
-        sb.Append(';');
-
-        return sb.ToString();
-    }
-
-    private static readonly ConcurrentDictionary<SqlBuilderCacheKey, object> StringFuncCache = new ConcurrentDictionary<SqlBuilderCacheKey, object>();
-
-    internal static string BuildInsertQueryExpression<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
-    {
-        Func<T, string> mapEntityFunc;
-
-        Type type = typeof(T);
-
-        SqlBuilderCacheKey cacheKey = new SqlBuilderCacheKey(sqlBuilder.GetType().TypeHandle, type.TypeHandle);
-
-        var tableName = Resolvers.Table(type, sqlBuilder);
-
-        // Use all non-key and non-generated properties for inserts
-        var keyProperties = Resolvers.KeyProperties(type);
-        var typeProperties = Resolvers.Properties(type)
-            .Where(x => !x.IsGenerated)
-            .Select(x => x.Property)
-            .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property))
-            .ToArray();
-
-        if (StringFuncCache.TryGetValue(cacheKey, out object? func))
-        {
-            mapEntityFunc = (Func<T, string>) func;
-        }
-        else
-        {
-            mapEntityFunc = GenerateStringMapFunc<T>(typeProperties);
-
-            StringFuncCache[cacheKey] = mapEntityFunc;
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.AppendFormat("INSERT INTO {0} (", tableName);
-
-        var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder, false));
-
-        sb.AppendJoin(", ", columnNames);
-        sb.AppendLine(") VALUES");
-
-        foreach (T entity in entities)
-        {
-            sb.Append(mapEntityFunc(entity));
-
-            sb.AppendLine(",");
-        }
-
-        sb.Remove(sb.Length - 3, 3);
-        sb.Append(';');
-
-        return sb.ToString();
-    }
-
-    private static readonly ConcurrentDictionary<SqlBuilderCacheKey, object> StringBuilderFuncCache = new ConcurrentDictionary<SqlBuilderCacheKey, object>();
-
-    internal static string BuildInsertQueryExpressionStringBuilder<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
+    internal static string BuildInsertQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
     {
         Func<T, StringBuilder, StringBuilder> mapEntityFunc;
 
@@ -256,9 +145,9 @@ public static partial class DommelBulkMapper
         {
             return typeMapper;
         }
-        else if (type.IsEnum)
+        else if (type.IsEnum && TypeMappers.TryGetValue(typeof(Enum), out ITypeMapper enumTypeMapper))
         {
-            return EnumTypeMapper;
+            return enumTypeMapper;
         }
 
         throw new NotSupportedException($"Not found type mapper for type {type}");
@@ -336,59 +225,6 @@ public static partial class DommelBulkMapper
             expression,
             entityParameter,
             stringBuilderParameter);
-
-        return lambdaExpression.Compile();
-    }
-
-
-    private static MethodInfo? stringFormatMethod = typeof(string).GetMethod("Format", new []{typeof(string), typeof(object[])});
-
-    private static Func<T, string> GenerateStringMapFunc<T>(IReadOnlyCollection<PropertyInfo> typeProperties)
-    {
-        string format = $"({string.Join(", ", Enumerable.Range(0, typeProperties.Count).Select(x => $"{{{x}}}"))})";
-
-        ParameterExpression entityParameter = Expression.Parameter(typeof(T));
-
-        IEnumerable<Expression> expressions = typeProperties
-            .Select(x =>
-            {
-                ITypeMapper typeMapper = GetTypeMapper(x.PropertyType);
-
-                LambdaExpression expression = typeMapper.GetExpression();
-
-                Type typeMapperParameterType = expression.Parameters[0].Type;
-
-                Expression property;
-
-                if (!x.PropertyType.IsValueType || (x.PropertyType.IsGenericType && x.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>)))
-                {
-                    property = Expression.Property(entityParameter, x);
-
-                    ParameterExpression propertyTypeParameter = Expression.Parameter(x.PropertyType, "property");
-                    Expression typeMapperParameter = x.PropertyType == typeMapperParameterType
-                        ? propertyTypeParameter
-                        : Expression.Convert(propertyTypeParameter, typeMapperParameterType);
-
-                    expression = Expression.Lambda(
-                        Expression.Condition(
-                            Expression.Equal(propertyTypeParameter, Expression.Constant(null)),
-                            Expression.Constant(Constants.NullStr),
-                            Expression.Invoke(typeMapper.GetExpression(), typeMapperParameter)),
-                        propertyTypeParameter);
-                }
-                else
-                {
-                    property = x.PropertyType == typeMapperParameterType
-                        ? Expression.Property(entityParameter, x)
-                        : Expression.Convert(Expression.Property(entityParameter, x), typeMapperParameterType);
-                }
-
-                return Expression.Invoke(expression, property);
-            });
-
-        var lambdaExpression = Expression.Lambda<Func<T, string>>(
-            Expression.Call(stringFormatMethod, Expression.Constant(format), Expression.NewArrayInit(typeof(string), expressions)),
-            entityParameter);
 
         return lambdaExpression.Compile();
     }

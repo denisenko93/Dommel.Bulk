@@ -9,18 +9,10 @@ namespace Dommel.Bulk.TypeMap;
 public class GenericTypeMapper<T> : ITypeMapper
 {
     private readonly Expression<Func<T, string>> _expression;
-    private readonly Lazy<Func<T, string>> _funcLazy;
 
     public GenericTypeMapper(Expression<Func<T, string>> expression)
     {
         _expression = expression;
-
-        _funcLazy = new Lazy<Func<T, string>>(() => _expression.Compile());
-    }
-    /// <inheritdoc/>
-    public string Map(object value)
-    {
-        return _funcLazy.Value.Invoke((T)value);
     }
 
     /// <inheritdoc/>

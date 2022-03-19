@@ -7,31 +7,15 @@ public class SqlBuilderBenchmarks : BenchmarksBase
 {
     private readonly ISqlBuilder _sqlBuilder = new MySqlSqlBuilder();
 
-    [Benchmark]
-    public void SqlBuilderReflectionBenchmark()
+    [Benchmark, BenchmarkCategory("simple")]
+    public void SqlBuilderBenchmark()
     {
-        DommelBulkMapper.BuildInsertQueryReflection(_sqlBuilder, data);
-        DommelBulkMapper.BuildInsertQueryReflection(_sqlBuilder, data);
+        DommelBulkMapper.BuildInsertQuery(_sqlBuilder, data);
     }
 
-    [Benchmark]
-    public void SqlBuilderExpressionBenchmark()
-    {
-        DommelBulkMapper.BuildInsertQueryExpression(_sqlBuilder, data);
-        DommelBulkMapper.BuildInsertQueryExpression(_sqlBuilder, data);
-    }
-
-    [Benchmark]
-    public void SqlBuilderExpressionStringBuilderBenchmark()
-    {
-        DommelBulkMapper.BuildInsertQueryExpressionStringBuilder(_sqlBuilder, data);
-        DommelBulkMapper.BuildInsertQueryExpressionStringBuilder(_sqlBuilder, data);
-    }
-
-    [Benchmark]
+    [Benchmark, BenchmarkCategory("parameters")]
     public void SqlBuilderParametersBenchmark()
     {
-        DommelBulkMapper.BuildInsertParametersQuery(_sqlBuilder, data);
         DommelBulkMapper.BuildInsertParametersQuery(_sqlBuilder, data);
     }
 }

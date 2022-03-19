@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dommel.Bulk", "src\Dommel.Bulk\Dommel.Bulk.csproj", "{9D558A00-9AF6-4363-ACB3-3E012650CA6B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{35F96050-54EB-42EF-89ED-5EB1058C3A9A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3D447E48-DFA0-4A58-ADFC-ADDA85CBD835}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dommel.Bulk.IntegrationTests", "tests\Dommel.Bulk.IntegrationTests\Dommel.Bulk.IntegrationTests.csproj", "{59A84A7E-1922-4C99-B7BE-DFB240C0C16B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{DE8EAC6A-FDDF-4CF7-BB34-59FD51A5E3AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dommel.Bulk.Benchmarks", "benchmarks\Dommel.Bulk.Benchmarks\Dommel.Bulk.Benchmarks.csproj", "{FBC863AA-1000-4392-88FE-9667C77007B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dommel.Bulk.Tests", "tests\Dommel.Bulk.Tests\Dommel.Bulk.Tests.csproj", "{2A0CE43B-C833-4DD9-A63F-D26D664FB824}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dommel.Bulk.Tests.Common", "tests\Dommel.Bulk.Tests.Common\Dommel.Bulk.Tests.Common.csproj", "{D4B28BBB-93F7-4E0D-B3FD-315BC124EFDB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{A6E67440-AF18-4B67-AD81-73E349D0BECE}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9D558A00-9AF6-4363-ACB3-3E012650CA6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D558A00-9AF6-4363-ACB3-3E012650CA6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D558A00-9AF6-4363-ACB3-3E012650CA6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D558A00-9AF6-4363-ACB3-3E012650CA6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59A84A7E-1922-4C99-B7BE-DFB240C0C16B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59A84A7E-1922-4C99-B7BE-DFB240C0C16B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59A84A7E-1922-4C99-B7BE-DFB240C0C16B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59A84A7E-1922-4C99-B7BE-DFB240C0C16B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBC863AA-1000-4392-88FE-9667C77007B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBC863AA-1000-4392-88FE-9667C77007B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBC863AA-1000-4392-88FE-9667C77007B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBC863AA-1000-4392-88FE-9667C77007B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A0CE43B-C833-4DD9-A63F-D26D664FB824}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A0CE43B-C833-4DD9-A63F-D26D664FB824}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A0CE43B-C833-4DD9-A63F-D26D664FB824}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A0CE43B-C833-4DD9-A63F-D26D664FB824}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4B28BBB-93F7-4E0D-B3FD-315BC124EFDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4B28BBB-93F7-4E0D-B3FD-315BC124EFDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4B28BBB-93F7-4E0D-B3FD-315BC124EFDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4B28BBB-93F7-4E0D-B3FD-315BC124EFDB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9D558A00-9AF6-4363-ACB3-3E012650CA6B} = {35F96050-54EB-42EF-89ED-5EB1058C3A9A}
+		{59A84A7E-1922-4C99-B7BE-DFB240C0C16B} = {3D447E48-DFA0-4A58-ADFC-ADDA85CBD835}
+		{FBC863AA-1000-4392-88FE-9667C77007B3} = {DE8EAC6A-FDDF-4CF7-BB34-59FD51A5E3AF}
+		{2A0CE43B-C833-4DD9-A63F-D26D664FB824} = {3D447E48-DFA0-4A58-ADFC-ADDA85CBD835}
+		{D4B28BBB-93F7-4E0D-B3FD-315BC124EFDB} = {3D447E48-DFA0-4A58-ADFC-ADDA85CBD835}
+	EndGlobalSection
+EndGlobal

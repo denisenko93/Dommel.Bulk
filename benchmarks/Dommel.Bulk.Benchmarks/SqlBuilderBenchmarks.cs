@@ -2,7 +2,6 @@
 
 namespace Dommel.Bulk.Benchmarks;
 
-[MemoryDiagnoser()]
 public class SqlBuilderBenchmarks : BenchmarksBase
 {
     private readonly ISqlBuilder _sqlBuilder = new MySqlSqlBuilder();

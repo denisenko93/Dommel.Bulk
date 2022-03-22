@@ -3,11 +3,13 @@ using Dommel.Bulk.Tests.Common;
 
 namespace Dommel.Bulk.Benchmarks;
 
+[MarkdownExporterAttribute.GitHub]
+[MemoryDiagnoser()]
 public class BenchmarksBase
 {
     protected IReadOnlyCollection<Person> data;
 
-    [Params(100_000)]
+    [Params(10_000)]
     public virtual int DataSize { get; set; }
 
     [GlobalSetup]

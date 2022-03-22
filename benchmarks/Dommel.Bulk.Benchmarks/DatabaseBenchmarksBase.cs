@@ -15,7 +15,7 @@ public abstract class DatabaseBenchmarksBase : SqlBuilderBenchmarks
         _connection = connection;
     }
 
-    [Params(100_000)]
+    [Params(10_000)]
     public override int DataSize { get; set; }
 
     public override void Setup()
@@ -37,7 +37,7 @@ public abstract class DatabaseBenchmarksBase : SqlBuilderBenchmarks
         await _connection.BulkInsertParametersAsync(data);
     }
 
-    // [Benchmark(Baseline = true)]
+    [Benchmark]
     public async Task InsertAllBenchmarkAsync()
     {
         await _connection.InsertAllAsync(data);

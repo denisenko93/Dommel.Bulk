@@ -15,7 +15,7 @@ public static partial class DommelBulkMapper
 
     private static Dictionary<Type, ITypeMapper> TypeMappers { get; } = new Dictionary<Type, ITypeMapper>
     {
-        [typeof(bool)] = new BoolTypeMapper(),
+        [typeof(bool)] = new GenericTypeMapper<bool>(x => x ? "1" : "0"),
         [typeof(byte)] = new FormatTypeMapper<byte>("D"),
         [typeof(char)] = new GenericTypeMapper<char>(x => $"'{x.ToString().Escape()}'"),
         [typeof(double)] = new FormatTypeMapper<double>("G17"),
@@ -29,13 +29,12 @@ public static partial class DommelBulkMapper
         [typeof(ushort)] = new FormatTypeMapper<ushort>("D"),
         [typeof(decimal)] = new FormatTypeMapper<decimal>("G"),
         [typeof(DateTime)] = new FormatTypeMapper<DateTime>("yyyy-MM-dd HH:mm:ss.ffffff", quote: "'"),
-        [typeof(DateTimeOffset)] = new FormatTypeMapper<DateTimeOffset>("yyyy-MM-dd HH:mm:ss.ffffffK", quote: "'"),
+        [typeof(DateTimeOffset)] = new GenericTypeMapper<DateTimeOffset>(x=> $"'{x.UtcDateTime:yyyy-MM-dd HH:mm:ss.ffffff}{x:zzz}'"),
         [typeof(Guid)] = new FormatTypeMapper<Guid>("D", quote: "'"),
         [typeof(string)] = new GenericTypeMapper<string>(x => $"'{x.Escape()}'"),
-        [typeof(TimeSpan)] = new TimeSpanTimeMapper(),
-        [typeof(ArraySegment<byte>)] = new ByteArraySegmentTypeMapper("0x{0}"),
-        [typeof(byte[])] = new ByteArrayTypeMapper("0x{0}"),
-        [typeof(Enum)] = new FormatTypeMapper<Enum>("d"),
+        [typeof(TimeSpan)] = new GenericTypeMapper<TimeSpan>(x => $"'{(int) x.TotalHours}{x:\\:mm\\:ss\\.ffffff}'"),
+        [typeof(ArraySegment<byte>)] = new GenericTypeMapper<ArraySegment<byte>>(x => $"0x{x.ToHexString()}"),
+        [typeof(byte[])] = new GenericTypeMapper<byte[]>(x => $"0x{x.ToHexString()}"),
 #if NET6_0_OR_GREATER
         [typeof(DateOnly)] = new FormatTypeMapper<DateOnly>("yyyy-MM-dd", quote:"'"),
         [typeof(TimeOnly)] = new FormatTypeMapper<TimeOnly>("HH:mm:ss.ffffff", quote:"'"),
@@ -43,14 +42,23 @@ public static partial class DommelBulkMapper
     };
 
     /// <summary>
-    /// Adds a custom implementation of <see cref="ITypeMapper"/>
-    /// for the specified type
+    /// Adds a custom type mapper for the specific <see cref="type"/>. Must be implementation of <see cref="ITypeMapper"/>
     /// </summary>
     /// <param name="type">type to the map</param>
     /// <param name="typeMapper">An implementation of the <see cref="ITypeMapper"/> interface.</param>
     public static void AddTypeMapper(Type type, ITypeMapper typeMapper)
     {
         TypeMappers[type] = typeMapper;
+    }
+
+    /// <summary>
+    /// Add custom type mapper for the generic <see cref="T"/>. Must be implementation of <see cref="GenericTypeMapper{T}"/>
+    /// </summary>
+    /// <param name="genericTypeMapper">Custom implementation of <see cref="GenericTypeMapper{T}"/></param>
+    /// <typeparam name="T">Type to map</typeparam>
+    public static void AddTypeMapper<T>(GenericTypeMapper<T> genericTypeMapper)
+    {
+        TypeMappers[typeof(T)] = genericTypeMapper;
     }
 
     /// <summary>
@@ -141,11 +149,11 @@ public static partial class DommelBulkMapper
     {
         type = Nullable.GetUnderlyingType(type) ?? type;
 
-        if (TypeMappers.TryGetValue(type, out ITypeMapper typeMapper))
+        if (TypeMappers.TryGetValue(type, out ITypeMapper? typeMapper))
         {
             return typeMapper;
         }
-        else if (type.IsEnum && TypeMappers.TryGetValue(typeof(Enum), out ITypeMapper enumTypeMapper))
+        else if (type.IsEnum && TypeMappers.TryGetValue(Enum.GetUnderlyingType(type), out ITypeMapper? enumTypeMapper))
         {
             return enumTypeMapper;
         }

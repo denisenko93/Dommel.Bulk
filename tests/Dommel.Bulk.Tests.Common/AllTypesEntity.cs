@@ -1,7 +1,10 @@
-﻿namespace Dommel.Bulk.Tests.Common;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Dommel.Bulk.Tests.Common;
 
 public class AllTypesEntity
 {
+    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public Guid Id { get; set; }
 
     public Guid? Ref { get; set; }
@@ -103,8 +106,4 @@ public class AllTypesEntity
     public byte[] ByteArray { get; set; }
 
     public byte[]? ByteArrayNull { get; set; }
-
-    public ArraySegment<byte> ByteArraySegment { get; set; }
-
-    public ArraySegment<byte>? ByteArraySegmentNull { get; set; }
 }

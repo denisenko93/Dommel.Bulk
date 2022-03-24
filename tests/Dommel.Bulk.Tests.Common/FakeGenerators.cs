@@ -40,8 +40,8 @@ public static class FakeGenerators
         .RuleFor(x => x.SByteNull, f => f.Random.SByte().OrNull(f))
         .RuleFor(x => x.Bool, f => f.Random.Bool())
         .RuleFor(x => x.BoolNull, f => f.Random.Bool().OrNull(f))
-        .RuleFor(x => x.Char, f => f.Random.Char())
-        .RuleFor(x => x.CharNull, f => f.Random.Char().OrNull(f))
+        .RuleFor(x => x.Char, f => f.Random.Char(max:'\uD7FF'))
+        .RuleFor(x => x.CharNull, f => f.Random.Char(max:'\uD7FF').OrNull(f))
         .RuleFor(x => x.String, f => f.Random.String2(100, 200, "abcdefghijklmnopqrstuvwxyz\r\n\t\b\0'\"\\"+(char)26).OrNull(f))
         .RuleFor(x => x.StringNull, f => f.Random.String2(100, 200, "abcdefghijklmnopqrstuvwxyz\r\n\t\b\0'\"\\"+(char)26).OrNull(f))
         .RuleFor(x => x.Enum, f => f.Random.Enum<DayOfWeek>())
@@ -58,9 +58,7 @@ public static class FakeGenerators
         .RuleFor(x => x.TimeOnly, f => f.Date.RecentTimeOnly())
         .RuleFor(x => x.TimeOnlyNull, f => f.Date.RecentTimeOnly())
 #endif
-        .RuleFor(x => x.ByteArray, f => f.Random.Bytes(1000).OrNull(f))
+        .RuleFor(x => x.ByteArray, f => f.Random.Bytes(1000))
         .RuleFor(x => x.ByteArrayNull, f => f.Random.Bytes(1000).OrNull(f))
-        .RuleFor(x => x.ByteArraySegment, f => new ArraySegment<byte>(f.Random.Bytes(1000)))
-        .RuleFor(x => x.ByteArraySegmentNull, f => new ArraySegment<byte>(f.Random.Bytes(1000)).OrNull(f))
         ;
 }

@@ -33,8 +33,7 @@ Use SQL parameters for insert values. Support for all databases. Has middle perf
 
 ## Type mappers
 
-Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `DateTimeOffset`, `Guid`, `string`, `TimeSpan`, `DateOnly`, `TimeOnly`, `ArraySegment<byte>`, `byte[]`, enum types and nullable types
-
+Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `DateTimeOffset`, `Guid`, `string`, `TimeSpan`, `byte[]`, enum types and nullable types.
 ## Async and non-async
 All Dommel.Bulk methods have async and non-async variants, such as as `BulkInsert` & `BulkInsertAsync`, `BulkInsertParameters` & `BulkInsertParametersAsync`.
 

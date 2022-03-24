@@ -34,7 +34,67 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase
                 for each row
             BEGIN
                 set NEW.created_on = NOW();
-            end;");
+            end;
+
+            create table `AllTypesEntities`(
+                `Id` char(36) not null,
+                `Ref` char(36) null,
+
+                `Short` SMALLINT not null,
+                `ShortNull` SMALLINT null,
+                `UShort` SMALLINT UNSIGNED not null,
+                `UShortNull` SMALLINT UNSIGNED null,
+
+                `Int` int not null,
+                `IntNull` int null,
+                `UInt` int UNSIGNED not null,
+                `UIntNull` int UNSIGNED null,
+
+                `Long` BIGINT not null,
+                `LongNull` BIGINT null,
+                `ULong` BIGINT UNSIGNED not null,
+                `ULongNull` BIGINT UNSIGNED null,
+
+                `Decimal` decimal(65,28) not null,
+                `DecimalNull` decimal(65,28) null,
+
+                `Float` float not null,
+                `FloatNull` float null,
+
+                `Double` double not null,
+                `DoubleNull` double null,
+
+                `Byte` TINYINT UNSIGNED not null,
+                `ByteNull` TINYINT UNSIGNED null,
+                `SByte` TINYINT not null,
+                `SByteNull` TINYINT null,
+
+                `Bool` tinyint(1) not null,
+                `BoolNull` tinyint(1) null,
+
+                `Char` char(1) not null,
+                `CharNull` char(1) null,
+
+                `String` varchar(255) null,
+                `StringNull` text null,
+
+                `Enum` int not null,
+                `EnumNull` int null,
+
+                `DateTime` datetime(6) not null,
+                `DateTimeNull` datetime(6) null,
+
+                `DateTimeOffset` datetime(6) not null,
+                `DateTimeOffsetNull` datetime(6) null,
+
+                `TimeSpan` TIME(6) not null,
+                `TimeSpanNull` TIME(6) null,
+
+                `ByteArray` VARBINARY(1003) not null,
+                `ByteArrayNull` blob null,
+
+
+                primary key(Id));");
         }
     }
 

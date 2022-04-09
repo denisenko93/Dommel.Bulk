@@ -6,6 +6,7 @@ using Dommel.Bulk.Tests.Common;
 namespace Dommel.Bulk.Benchmarks;
 
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory), CategoriesColumn]
+[SimpleJob(targetCount: 10)]
 public abstract class DatabaseBenchmarksBase : SqlBuilderBenchmarks
 {
     private IDbConnection _connection;
@@ -43,10 +44,21 @@ public abstract class DatabaseBenchmarksBase : SqlBuilderBenchmarks
         await _connection.InsertAllAsync(data);
     }
 
-    [GlobalCleanup]
+    [Benchmark]
+    public async Task InsertAllTransactionBenchmarkAsync()
+    {
+        using (IDbTransaction transaction = _connection.BeginTransaction())
+        {
+            await _connection.InsertAllAsync(data, transaction);
+
+            transaction.Commit();
+        }
+    }
+
+    [IterationCleanup]
     public void Cleanup()
     {
-        _connection.DeleteAll<Person>();
+        _connection.DeleteAll<AllTypesEntity>();
     }
 
     protected abstract void SetupDatabase(IDbConnection connection);

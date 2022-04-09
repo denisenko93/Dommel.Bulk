@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -15,41 +16,30 @@ public static partial class DommelBulkMapper
 
     private static Dictionary<Type, ITypeMapper> TypeMappers { get; } = new Dictionary<Type, ITypeMapper>
     {
-        [typeof(bool)] = new GenericTypeMapper<bool>(x => x ? "1" : "0"),
-        [typeof(byte)] = new FormatTypeMapper<byte>("D"),
-        [typeof(char)] = new GenericTypeMapper<char>(x => $"'{x.ToString().Escape()}'"),
-        [typeof(double)] = new FormatTypeMapper<double>("G17"),
-        [typeof(float)] = new FormatTypeMapper<float>("G9"),
-        [typeof(int)] = new FormatTypeMapper<int>("D"),
-        [typeof(long)] = new FormatTypeMapper<long>("D"),
-        [typeof(sbyte)] = new FormatTypeMapper<sbyte>("D"),
-        [typeof(short)] = new FormatTypeMapper<short>("D"),
-        [typeof(uint)] = new FormatTypeMapper<uint>("D"),
-        [typeof(ulong)] = new FormatTypeMapper<ulong>("D"),
-        [typeof(ushort)] = new FormatTypeMapper<ushort>("D"),
-        [typeof(decimal)] = new FormatTypeMapper<decimal>("G"),
-        [typeof(DateTime)] = new FormatTypeMapper<DateTime>("yyyy-MM-dd HH:mm:ss.ffffff", quote: "'"),
-        [typeof(DateTimeOffset)] = new GenericTypeMapper<DateTimeOffset>(x=> $"'{x.UtcDateTime:yyyy-MM-dd HH:mm:ss.ffffff}{x:zzz}'"),
-        [typeof(Guid)] = new FormatTypeMapper<Guid>("D", quote: "'"),
-        [typeof(string)] = new GenericTypeMapper<string>(x => $"'{x.Escape()}'"),
-        [typeof(TimeSpan)] = new GenericTypeMapper<TimeSpan>(x => $"'{(int) x.TotalHours}{x:\\:mm\\:ss\\.ffffff}'"),
-        [typeof(ArraySegment<byte>)] = new GenericTypeMapper<ArraySegment<byte>>(x => $"0x{x.ToHexString()}"),
-        [typeof(byte[])] = new GenericTypeMapper<byte[]>(x => $"0x{x.ToHexString()}"),
+        [typeof(bool)] = new GenericTypeMapper<bool>((x, sb) => x ? sb.Append('1') : sb.Append('0')),
+        [typeof(byte)] = new GenericTypeMapper<byte>((x, sb) => sb.Append(x)),
+        [typeof(char)] = new GenericTypeMapper<char>((x, sb) => sb.Append('\'').AppendEscapeMysql(x).Append('\'')),
+        [typeof(double)] = new GenericTypeMapper<double>((x, sb) => sb.Append(x.ToString(CultureInfo.InvariantCulture))),
+        [typeof(float)] = new GenericTypeMapper<float>((x, sb) => sb.Append(x.ToString(CultureInfo.InvariantCulture))),
+        [typeof(int)] = new GenericTypeMapper<int>((x, sb) => sb.Append(x)),
+        [typeof(long)] = new GenericTypeMapper<long>((x, sb) => sb.Append(x)),
+        [typeof(sbyte)] = new GenericTypeMapper<sbyte>((x, sb) => sb.Append(x)),
+        [typeof(short)] = new GenericTypeMapper<short>((x, sb) => sb.Append(x)),
+        [typeof(uint)] = new GenericTypeMapper<uint>((x, sb) => sb.Append(x)),
+        [typeof(ulong)] = new GenericTypeMapper<ulong>((x, sb) => sb.Append(x)),
+        [typeof(ushort)] = new GenericTypeMapper<ushort>((x, sb) => sb.Append(x)),
+        [typeof(decimal)] = new GenericTypeMapper<decimal>((x, sb) => sb.Append(x.ToString(CultureInfo.InvariantCulture))),
+        [typeof(DateTime)] = new GenericTypeMapper<DateTime>((x, sb) => sb.Append('\'').AppendMysqlDateTime(x).Append('\'')),
+        [typeof(Guid)] = new GenericTypeMapper<Guid>((x, sb) => sb.Append('\'').AppendGuid(x).Append('\'')),
+        [typeof(string)] = new GenericTypeMapper<string>((x, sb) => sb.Append('\'').AppendEscapeMysql(x).Append('\'')),
+        [typeof(TimeSpan)] = new GenericTypeMapper<TimeSpan>((x, sb) => sb.Append('\'').Append((int)x.TotalHours).Append(x.ToString("\\:mm\\:ss\\.ffffff")).Append('\'')),
+        [typeof(ArraySegment<byte>)] = new GenericTypeMapper<ArraySegment<byte>>((x, sb) => sb.Append("0x").AppendHexString(x)),
+        [typeof(byte[])] = new GenericTypeMapper<byte[]>((x, sb) => sb.Append("0x").AppendHexString(x)),
 #if NET6_0_OR_GREATER
-        [typeof(DateOnly)] = new FormatTypeMapper<DateOnly>("yyyy-MM-dd", quote:"'"),
-        [typeof(TimeOnly)] = new FormatTypeMapper<TimeOnly>("HH:mm:ss.ffffff", quote:"'"),
+        [typeof(DateOnly)] = new GenericTypeMapper<DateOnly>((x, sb) => sb.Append('\'').Append(x.ToString("yyyy-MM-dd")).Append('\'')),
+        [typeof(TimeOnly)] = new GenericTypeMapper<TimeOnly>((x, sb) => sb.Append('\'').Append(x.ToString("HH:mm:ss.ffffff")).Append('\'')),
 #endif
     };
-
-    /// <summary>
-    /// Adds a custom type mapper for the specific <see cref="type"/>. Must be implementation of <see cref="ITypeMapper"/>
-    /// </summary>
-    /// <param name="type">type to the map</param>
-    /// <param name="typeMapper">An implementation of the <see cref="ITypeMapper"/> interface.</param>
-    public static void AddTypeMapper(Type type, ITypeMapper typeMapper)
-    {
-        TypeMappers[type] = typeMapper;
-    }
 
     /// <summary>
     /// Add custom type mapper for the generic <see cref="T"/>. Must be implementation of <see cref="GenericTypeMapper{T}"/>
@@ -69,7 +59,8 @@ public static partial class DommelBulkMapper
     /// <param name="entities">The entities to be inserted.</param>
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <returns>The number of rows affected.</returns>
-    public static int BulkInsert<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null)
+    public static int BulkInsert<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities,
+        IDbTransaction? transaction = null)
         where TEntity : class
     {
         var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
@@ -86,7 +77,8 @@ public static partial class DommelBulkMapper
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <param name="cancellationToken">Optional cancellation token for the command.</param>
     /// <returns>The number of rows affected.</returns>
-    public static Task<int> BulkInsertAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public static Task<int> BulkInsertAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities,
+        IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
         where TEntity : class
     {
         var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
@@ -145,7 +137,7 @@ public static partial class DommelBulkMapper
         return sb.ToString();
     }
 
-    public static ITypeMapper GetTypeMapper(Type type)
+    private static ITypeMapper GetTypeMapper(Type type)
     {
         type = Nullable.GetUnderlyingType(type) ?? type;
 
@@ -164,7 +156,7 @@ public static partial class DommelBulkMapper
 #if NET6_0_OR_GREATER
     private static MethodInfo? stringBuilderAppendMethod = typeof(StringBuilder).GetMethod("Append", new []{typeof(StringBuilder.AppendInterpolatedStringHandler)});
 #else
-    private static MethodInfo stringBuilderAppendMethod = typeof(StringBuilder).GetMethod("Append", new []{typeof(string)});
+    private static MethodInfo stringBuilderAppendMethod = typeof(StringBuilder).GetMethod("Append", new[] {typeof(string)});
 #endif
 
     private static Func<T, StringBuilder, StringBuilder> GenerateStringBuilderMapFunc<T>(IEnumerable<PropertyInfo> typeProperties)
@@ -174,7 +166,10 @@ public static partial class DommelBulkMapper
 
         bool firstProperty = true;
 
-        Expression expression = Expression.Call(stringBuilderParameter, stringBuilderAppendMethod, Expression.Constant("("));;
+        Expression expression = Expression.Call(
+            stringBuilderParameter,
+            stringBuilderAppendMethod,
+            Expression.Constant("("));
 
         foreach (PropertyInfo typeProperty in typeProperties)
         {
@@ -186,7 +181,8 @@ public static partial class DommelBulkMapper
 
             Expression property;
 
-            if (!typeProperty.PropertyType.IsValueType || (typeProperty.PropertyType.IsGenericType && typeProperty.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>)))
+            if (!typeProperty.PropertyType.IsValueType || (typeProperty.PropertyType.IsGenericType
+                && typeProperty.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>)))
             {
                 property = Expression.Property(entityParameter, typeProperty);
 
@@ -198,9 +194,11 @@ public static partial class DommelBulkMapper
                 typePropertyExpression = Expression.Lambda(
                     Expression.Condition(
                         Expression.Equal(propertyTypeParameter, Expression.Constant(null)),
-                        Expression.Constant(Constants.NullStr),
-                        Expression.Invoke(typeMapper.GetExpression(), typeMapperParameter)),
-                    propertyTypeParameter);
+                        Expression.Call(stringBuilderParameter, stringBuilderAppendMethod,
+                            Expression.Constant(Constants.NullStr)),
+                        Expression.Invoke(typeMapper.GetExpression(), typeMapperParameter, stringBuilderParameter)),
+                    propertyTypeParameter,
+                    stringBuilderParameter);
             }
             else
             {
@@ -218,16 +216,13 @@ public static partial class DommelBulkMapper
                 expression = Expression.Call(expression, stringBuilderAppendMethod, Expression.Constant(", "));
             }
 
-            expression = Expression.Call(
-                expression,
-                stringBuilderAppendMethod,
-                Expression.Invoke(typePropertyExpression, property));
+            expression = Expression.Invoke(typePropertyExpression, property, expression);
         }
 
         expression = Expression.Call(
-                expression,
-                stringBuilderAppendMethod,
-                Expression.Constant(")"));
+            expression,
+            stringBuilderAppendMethod,
+            Expression.Constant(")"));
 
         var lambdaExpression = Expression.Lambda<Func<T, StringBuilder, StringBuilder>>(
             expression,

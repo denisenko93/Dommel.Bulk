@@ -6,7 +6,7 @@ namespace Dommel.Bulk.TypeMap;
 /// Defines methods for resolving database values from entity value.
 /// Custom implementations can be registered with <see cref="DommelBulkMapper.AddTypeMapper(Type,ITypeMapper)"/>.
 /// </summary>
-public interface ITypeMapper
+internal interface ITypeMapper
 {
     /// <summary>
     /// return Expression interpret map function for type.

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Text;
 
 namespace Dommel.Bulk.TypeMap;
 
@@ -8,9 +9,9 @@ namespace Dommel.Bulk.TypeMap;
 /// </summary>
 public class GenericTypeMapper<T> : ITypeMapper
 {
-    private readonly Expression<Func<T, string>> _expression;
+    private readonly Expression<Func<T, StringBuilder, StringBuilder>> _expression;
 
-    public GenericTypeMapper(Expression<Func<T, string>> expression)
+    public GenericTypeMapper(Expression<Func<T, StringBuilder, StringBuilder>> expression)
     {
         _expression = expression;
     }

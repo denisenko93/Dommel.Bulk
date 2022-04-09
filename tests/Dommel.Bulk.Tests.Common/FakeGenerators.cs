@@ -14,8 +14,8 @@ public static class FakeGenerators
 
     public static readonly Faker<AllTypesEntity> AllTypesFaker = new Faker<AllTypesEntity>()
         .StrictMode(true)
-        .RuleFor(x => x.Id, f => f.Random.Guid())
-        .RuleFor(x => x.Ref, f => f.Random.Guid())
+        .RuleFor(x => x.Id, f => Guid.NewGuid())
+        .RuleFor(x => x.Ref, f => Guid.NewGuid())
         .RuleFor(x => x.Short, f => f.Random.Short())
         .RuleFor(x => x.ShortNull, f => f.Random.Short().OrNull(f))
         .RuleFor(x => x.UShort, f => f.Random.UShort())
@@ -48,8 +48,6 @@ public static class FakeGenerators
         .RuleFor(x => x.EnumNull, f => f.Random.Enum<DayOfWeek>().OrNull(f))
         .RuleFor(x => x.DateTime, f => f.Date.Recent())
         .RuleFor(x => x.DateTimeNull, f => f.Date.Future().OrNull(f))
-        .RuleFor(x => x.DateTimeOffset, f => f.Date.RecentOffset())
-        .RuleFor(x => x.DateTimeOffsetNull, f => f.Date.FutureOffset().OrNull(f))
         .RuleFor(x => x.TimeSpan, f => f.Date.Timespan())
         .RuleFor(x => x.TimeSpanNull, f => f.Date.Timespan().OrNull(f))
 #if NET6_0_OR_GREATER

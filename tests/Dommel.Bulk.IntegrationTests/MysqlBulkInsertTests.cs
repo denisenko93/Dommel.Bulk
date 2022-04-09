@@ -84,9 +84,6 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase
                 `DateTime` datetime(6) not null,
                 `DateTimeNull` datetime(6) null,
 
-                `DateTimeOffset` datetime(6) not null,
-                `DateTimeOffsetNull` datetime(6) null,
-
                 `TimeSpan` TIME(6) not null,
                 `TimeSpanNull` TIME(6) null,
 

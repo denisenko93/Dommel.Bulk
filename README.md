@@ -33,32 +33,16 @@ Use SQL parameters for insert values. Support for all databases. Has middle perf
 
 ## Type mappers
 
-Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `DateTimeOffset`, `Guid`, `string`, `TimeSpan`, `byte[]`, enum types and nullable types.
+Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `Guid`, `string`, `TimeSpan`, `byte[]`, enum types and nullable types.
 ## Async and non-async
 All Dommel.Bulk methods have async and non-async variants, such as as `BulkInsert` & `BulkInsertAsync`, `BulkInsertParameters` & `BulkInsertParametersAsync`.
 
 ## Extensibility
-#### `ITypeMapper`
-Implement this interface if you want to customize the mapping types to SQL query
+#### TypeMapper
 
+Use the `AddTypeMapper()` method to register the custom type mapper:
 ```cs
-public class JsonTypeMapper : ITypeMapper
-{
-    public LambdaExpression GetExpression()
-    {
-        // Map JSON type to SQL string.
-        return (Expression<Func<JObject, string>>)x => $"'{x.ToString().Escape()}'";
-    }
-}
-```
-
-Use the `AddTypeMapper()` method to register the custom implementation:
-```cs
-AddTypeMapper(typeof(JObject), new JsonTypeMapper());
-```
-or
-```cs
-AddTypeMapper(typeof(JObject), new GenericTypeMapper<JObject>(x => $"'{x.ToString().Escape()}'"));
+AddTypeMapper(typeof(JObject), new GenericTypeMapper<JObject>((x, y) => y.Append('\'').AppendEscapeMysql(x.ToString()).Append('\'')));
 ```
 
 ## Performance
@@ -73,15 +57,16 @@ Intel Core i5-7300HQ CPU 2.50GHz (Kaby Lake), 1 CPU, 4 logical and 4 physical co
 
 
 ```
-|                             Method | Categories | DataSize |         Mean |        Error |       StdDev | Ratio | RatioSD |      Gen 0 |     Gen 1 |     Gen 2 | Allocated |
-|----------------------------------- |----------- |--------- |-------------:|-------------:|-------------:|------:|--------:|-----------:|----------:|----------:|----------:|
-|           BulkInsertBenchmarkAsync |     simple |    10000 |    353.41 ms |     7.023 ms |    17.228 ms |  1.00 |    0.00 |  2000.0000 | 1000.0000 |         - |     14 MB |
-|                SqlBuilderBenchmark |     simple |    10000 |     18.75 ms |     0.370 ms |     0.380 ms |  0.05 |    0.00 |  2187.5000 |  750.0000 |  312.5000 |     11 MB |
-|                                    |            |          |              |              |              |       |         |            |           |           |           |
-| BulkInsertParametersBenchmarkAsync | parameters |    10000 |    546.74 ms |    10.874 ms |    26.877 ms |  1.00 |    0.00 |  6000.0000 | 3000.0000 | 1000.0000 |     48 MB |
-|      SqlBuilderParametersBenchmark | parameters |    10000 |     65.50 ms |     1.301 ms |     3.605 ms |  0.12 |    0.01 |  3625.0000 | 1750.0000 |  875.0000 |     22 MB |~~~~
-|                                    |            |          |              |              |              |       |         |            |           |           |           |
-|            InsertAllBenchmarkAsync |            |    10000 | 57,054.74 ms | 2,369.037 ms | 6,157.442 ms |     ? |       ? | 14000.0000 | 1000.0000 |         - |     45 MB |
+|                             Method | Categories | DataSize |       Mean |      Error |     StdDev | Ratio |       Gen 0 |       Gen 1 |     Gen 2 | Allocated |
+|----------------------------------- |------------|----------|-----------:|-----------:|-----------:|------:|------------:|------------:|----------:|----------:|
+|           BulkInsertBenchmarkAsync |     simple | 10000    | 1,989.8 ms |   86.79 ms |   45.39 ms |  1.00 |  13000.0000 |   5000.0000 | 1000.0000 |    273 MB |
+|                SqlBuilderBenchmark |     simple | 10000    |   140.7 ms |   22.24 ms |   13.23 ms |  0.07 |  13000.0000 |   5000.0000 | 1000.0000 |    143 MB |
+|                                    |            |          |            |            |            |       |             |             |           |           |
+| BulkInsertParametersBenchmarkAsync | parameters | 10000    | 3,029.4 ms |   71.10 ms |   42.31 ms |  1.00 |  43000.0000 |  12000.0000 | 2000.0000 |    368 MB |
+|      SqlBuilderParametersBenchmark | parameters | 10000    |   516.9 ms |   16.59 ms |   10.98 ms |  0.17 |  19000.0000 |   7000.0000 | 1000.0000 |    156 MB |
+|                                    |            |          |            |            |            |       |             |             |           |           |
+|            InsertAllBenchmarkAsync |            | 10000    |   107.21 s |   29.986 s |   19.834 s |       |  38000.0000 |   3000.0000 |         - |    114 MB |
+| InsertAllTransactionBenchmarkAsync |            | 10000    |    15.98 s |    1.354 s |    0.896 s |       |  37000.0000 |   1000.0000 |         - |    113 MB |
 
 ## Disclaimer
 The material embodied in this software is provided to you "as-is" and without warranty of any kind, express, implied or otherwise, including without limitation, any warranty of fitness for a particular purpose. In no event shall the Centers for Disease Control and Prevention (CDC) or the United States (U.S.) government be liable to you or anyone else for any direct, special, incidental, indirect or consequential damages of any kind, or any damages whatsoever, including without limitation, loss of profit, loss of use, savings or revenue, or the claims of third parties, whether or not CDC or the U.S. government has been advised of the possibility of such loss, however caused and on any theory of liability, arising out of or in connection with the possession, use or performance of this software.

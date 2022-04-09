@@ -81,14 +81,14 @@ public abstract class BulkInsertTestsBase
             {
                 Assert.True(Math.Abs(allTypesEntity.FloatNull - allTypeFromDb.FloatNull ?? 0) < 0.000001, $"{Math.Abs(allTypesEntity.FloatNull - allTypeFromDb.FloatNull ?? 0)} must be less then {0.000001}");
             }
-            Assert.Equal(allTypesEntity.Double, allTypeFromDb.Double, 15);
+            Assert.True(Math.Abs(allTypesEntity.Double - allTypeFromDb.Double) < 0.000_000_000_000_001, $"{Math.Abs(allTypesEntity.Double - allTypeFromDb.Double)} must be less then {0.000001}");
             if (allTypesEntity.DoubleNull == null)
             {
                 Assert.Null(allTypeFromDb.DoubleNull);
             }
             else
             {
-                Assert.Equal(allTypesEntity.DoubleNull.Value, allTypeFromDb.DoubleNull.Value, 15);
+                Assert.True(Math.Abs(allTypesEntity.DoubleNull - allTypeFromDb.DoubleNull ?? 0) < 0.000_000_000_000_001, $"{Math.Abs(allTypesEntity.DoubleNull - allTypeFromDb.DoubleNull ?? 0)} must be less then {0.000001}");
             }
             Assert.Equal(allTypesEntity.Byte, allTypeFromDb.Byte);
             Assert.Equal(allTypesEntity.ByteNull, allTypeFromDb.ByteNull);
@@ -111,15 +111,6 @@ public abstract class BulkInsertTestsBase
             {
                 Assert.Equal(allTypesEntity.DateTimeNull.Value, allTypeFromDb.DateTimeNull.Value, TimeSpan.FromTicks(9));
             }
-            /*Assert.Equal(allTypesEntity.DateTimeOffset.LocalDateTime, allTypeFromDb.DateTimeOffset.LocalDateTime, TimeSpan.FromSeconds(1));
-            if (allTypesEntity.DateTimeOffsetNull == null)
-            {
-                Assert.Null(allTypeFromDb.DateTimeOffsetNull);
-            }
-            else
-            {
-                Assert.Equal(allTypesEntity.DateTimeOffsetNull.Value.LocalDateTime, allTypeFromDb.DateTimeOffsetNull.Value.LocalDateTime, TimeSpan.FromSeconds(1));
-            }*/
             Assert.True(allTypesEntity.TimeSpan - allTypeFromDb.TimeSpan < TimeSpan.FromSeconds(1) && allTypesEntity.TimeSpan - allTypeFromDb.TimeSpan > TimeSpan.FromSeconds(-1));
             Assert.True(allTypesEntity.TimeSpanNull == allTypeFromDb.TimeSpanNull
                         || (allTypesEntity.TimeSpanNull - allTypeFromDb.TimeSpanNull < TimeSpan.FromSeconds(1) && allTypesEntity.TimeSpanNull - allTypeFromDb.TimeSpanNull > TimeSpan.FromSeconds(-1)));

@@ -1,49 +1,34 @@
-﻿using System.Text;
-
-namespace Dommel.Bulk.Extensions;
+﻿namespace Dommel.Bulk.Extensions;
 
 internal static class StringExtensions
 {
-    public static string Escape(this string value)
+
+    public static bool TryEscapeMysql(this ReadOnlySpan<char> source, Span<char> target, out int written)
     {
-        StringBuilder sb = new StringBuilder(value.Length);
-        foreach (char c in value)
+        written = 0;
+
+        foreach (char c in source)
         {
-            switch (c)
+            string? targetChars = c.EscapeMySql();
+
+            if (written + (targetChars?.Length ?? 1) > target.Length)
             {
-                case (char)26:
-                    sb.Append("\\Z");
-                    break;
-                case '\0':
-                    sb.Append("\\0");
-                    break;
-                case '\'':
-                    sb.Append("\\'");
-                    break;
-                case '"':
-                    sb.Append("\\\"");
-                    break;
-                case '\b':
-                    sb.Append("\\b");
-                    break;
-                case '\n':
-                    sb.Append("\\n");
-                    break;
-                case '\r':
-                    sb.Append("\\r");
-                    break;
-                case '\t':
-                    sb.Append("\\t");
-                    break;
-                case '\\':
-                    sb.Append("\\\\");
-                    break;
-                default:
-                    sb.Append(c);
-                    break;
+                return false;
+            }
+
+            if (targetChars == null)
+            {
+                target[written++] = c;
+            }
+            else
+            {
+                foreach (char targetChar in targetChars)
+                {
+                    target[written++] = targetChar;
+                }
             }
         }
 
-        return sb.ToString();
+        return true;
     }
 }

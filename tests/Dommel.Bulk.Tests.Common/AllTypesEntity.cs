@@ -84,10 +84,6 @@ public class AllTypesEntity
 
     public DateTime? DateTimeNull { get; set; }
 
-    public DateTimeOffset DateTimeOffset { get; set; }
-
-    public DateTimeOffset? DateTimeOffsetNull { get; set; }
-
     public TimeSpan TimeSpan { get; set; }
 
     public TimeSpan? TimeSpanNull { get; set; }

@@ -7,7 +7,7 @@ namespace Dommel.Bulk.Benchmarks;
 [MemoryDiagnoser()]
 public class BenchmarksBase
 {
-    protected IReadOnlyCollection<Person> data;
+    protected IReadOnlyCollection<AllTypesEntity> data;
 
     [Params(10_000)]
     public virtual int DataSize { get; set; }
@@ -15,6 +15,6 @@ public class BenchmarksBase
     [GlobalSetup]
     public virtual void Setup()
     {
-        data = Enumerable.Range(0, DataSize).Select(x => FakeGenerators.PersonFaker.Generate()).ToArray();
+        data = Enumerable.Range(0, DataSize).Select(x => FakeGenerators.AllTypesFaker.Generate()).ToArray();
     }
 }

@@ -3,8 +3,8 @@ using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using Dapper;
+using Dommel.Bulk.DatabaseAdapters;
 using Dommel.Bulk.Extensions;
 using Dommel.Bulk.TypeMap;
 
@@ -13,43 +13,6 @@ namespace Dommel.Bulk;
 public static partial class DommelBulkMapper
 {
     private static readonly ConcurrentDictionary<SqlBuilderCacheKey, object> StringBuilderFuncCache = new ConcurrentDictionary<SqlBuilderCacheKey, object>();
-
-    private static Dictionary<Type, ITypeMapper> TypeMappers { get; } = new Dictionary<Type, ITypeMapper>
-    {
-        [typeof(bool)] = new GenericTypeMapper<bool>((x, sb) => x ? sb.Append('1') : sb.Append('0')),
-        [typeof(byte)] = new GenericTypeMapper<byte>((x, sb) => sb.Append(x)),
-        [typeof(char)] = new GenericTypeMapper<char>((x, sb) => sb.Append('\'').AppendEscapeMysql(x).Append('\'')),
-        [typeof(double)] = new GenericTypeMapper<double>((x, sb) => sb.Append(x.ToString(CultureInfo.InvariantCulture))),
-        [typeof(float)] = new GenericTypeMapper<float>((x, sb) => sb.Append(x.ToString(CultureInfo.InvariantCulture))),
-        [typeof(int)] = new GenericTypeMapper<int>((x, sb) => sb.Append(x)),
-        [typeof(long)] = new GenericTypeMapper<long>((x, sb) => sb.Append(x)),
-        [typeof(sbyte)] = new GenericTypeMapper<sbyte>((x, sb) => sb.Append(x)),
-        [typeof(short)] = new GenericTypeMapper<short>((x, sb) => sb.Append(x)),
-        [typeof(uint)] = new GenericTypeMapper<uint>((x, sb) => sb.Append(x)),
-        [typeof(ulong)] = new GenericTypeMapper<ulong>((x, sb) => sb.Append(x)),
-        [typeof(ushort)] = new GenericTypeMapper<ushort>((x, sb) => sb.Append(x)),
-        [typeof(decimal)] = new GenericTypeMapper<decimal>((x, sb) => sb.Append(x.ToString(CultureInfo.InvariantCulture))),
-        [typeof(DateTime)] = new GenericTypeMapper<DateTime>((x, sb) => sb.Append('\'').AppendMysqlDateTime(x).Append('\'')),
-        [typeof(Guid)] = new GenericTypeMapper<Guid>((x, sb) => sb.Append('\'').AppendGuid(x).Append('\'')),
-        [typeof(string)] = new GenericTypeMapper<string>((x, sb) => sb.Append('\'').AppendEscapeMysql(x).Append('\'')),
-        [typeof(TimeSpan)] = new GenericTypeMapper<TimeSpan>((x, sb) => sb.Append('\'').Append((int)x.TotalHours).Append(x.ToString("\\:mm\\:ss\\.ffffff")).Append('\'')),
-        [typeof(ArraySegment<byte>)] = new GenericTypeMapper<ArraySegment<byte>>((x, sb) => sb.Append("0x").AppendHexString(x)),
-        [typeof(byte[])] = new GenericTypeMapper<byte[]>((x, sb) => sb.Append("0x").AppendHexString(x)),
-#if NET6_0_OR_GREATER
-        [typeof(DateOnly)] = new GenericTypeMapper<DateOnly>((x, sb) => sb.Append('\'').Append(x.ToString("yyyy-MM-dd")).Append('\'')),
-        [typeof(TimeOnly)] = new GenericTypeMapper<TimeOnly>((x, sb) => sb.Append('\'').Append(x.ToString("HH:mm:ss.ffffff")).Append('\'')),
-#endif
-    };
-
-    /// <summary>
-    /// Add custom type mapper for the generic <see cref="T"/>. Must be implementation of <see cref="GenericTypeMapper{T}"/>
-    /// </summary>
-    /// <param name="genericTypeMapper">Custom implementation of <see cref="GenericTypeMapper{T}"/></param>
-    /// <typeparam name="T">Type to map</typeparam>
-    public static void AddTypeMapper<T>(GenericTypeMapper<T> genericTypeMapper)
-    {
-        TypeMappers[typeof(T)] = genericTypeMapper;
-    }
 
     /// <summary>
     /// Bulk inserts the specified collection of entities into the database.
@@ -63,7 +26,7 @@ public static partial class DommelBulkMapper
         IDbTransaction? transaction = null)
         where TEntity : class
     {
-        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
+        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), GetDatabaseAdapter(connection), entities);
         LogQuery<TEntity>(sql);
         return connection.Execute(sql, transaction);
     }
@@ -81,14 +44,14 @@ public static partial class DommelBulkMapper
         IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
         where TEntity : class
     {
-        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), entities);
+        var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), GetDatabaseAdapter(connection), entities);
         LogQuery<TEntity>(sql);
         return connection.ExecuteAsync(new CommandDefinition(sql, transaction: transaction, cancellationToken: cancellationToken));
     }
 
-    internal static string BuildInsertQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
+    internal static string? BuildInsertQuery<T>(ISqlBuilder sqlBuilder, IDatabaseAdapter databaseAdapter, IEnumerable<T> entities)
     {
-        Func<T, StringBuilder, StringBuilder> mapEntityFunc;
+        Action<T, TextWriter> mapEntityFunc;
 
         Type type = typeof(T);
 
@@ -104,76 +67,79 @@ public static partial class DommelBulkMapper
             .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property))
             .ToArray();
 
-        if (StringBuilderFuncCache.TryGetValue(cacheKey, out object func))
+        if (StringBuilderFuncCache.TryGetValue(cacheKey, out object? func))
         {
-            mapEntityFunc = (Func<T, StringBuilder, StringBuilder>) func;
+            mapEntityFunc = (Action<T, TextWriter>) func;
         }
         else
         {
-            mapEntityFunc = GenerateStringBuilderMapFunc<T>(typeProperties);
+            mapEntityFunc = GenerateStringBuilderMapFunc<T>(typeProperties, databaseAdapter, ", ");
 
             StringBuilderFuncCache[cacheKey] = mapEntityFunc;
         }
 
-        StringBuilder sb = new StringBuilder();
+        TextWriter textWriter = new StringWriter();
 
-        sb.AppendFormat("INSERT INTO {0} (", tableName);
+        textWriter.Write($"INSERT INTO {tableName} (");
 
         var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder, false));
 
-        sb.AppendJoin(", ", columnNames);
-        sb.AppendLine(") VALUES");
+        bool isFirst = true;
+        foreach (string columnName in columnNames)
+        {
+            if (isFirst)
+            {
+                isFirst = false;
+            }
+            else
+            {
+                textWriter.Write(", ");
+            }
 
+            textWriter.Write(columnName);
+        }
+        textWriter.WriteLine(") VALUES");
+
+        isFirst = true;
         foreach (T entity in entities)
         {
-            mapEntityFunc(entity, sb);
+            if (isFirst)
+            {
+                isFirst = false;
+            }
+            else
+            {
+                textWriter.WriteLine(",");
+            }
 
-            sb.AppendLine(",");
+            textWriter.Write("(");
+
+            mapEntityFunc(entity, textWriter);
+
+            textWriter.Write(")");
         }
+        textWriter.Write(";");
 
-        sb.Remove(sb.Length - 3, 3);
-        sb.Append(';');
-
-        return sb.ToString();
+        return textWriter.ToString();
     }
 
-    private static ITypeMapper GetTypeMapper(Type type)
-    {
-        type = Nullable.GetUnderlyingType(type) ?? type;
+    private static readonly MethodInfo TextWriterWriteMethod = typeof(TextWriter).GetMethod("Write", new []{typeof(string)})!;
 
-        if (TypeMappers.TryGetValue(type, out ITypeMapper? typeMapper))
-        {
-            return typeMapper;
-        }
-        else if (type.IsEnum && TypeMappers.TryGetValue(Enum.GetUnderlyingType(type), out ITypeMapper? enumTypeMapper))
-        {
-            return enumTypeMapper;
-        }
-
-        throw new NotSupportedException($"Not found type mapper for type {type}");
-    }
-
-#if NET6_0_OR_GREATER
-    private static MethodInfo? stringBuilderAppendMethod = typeof(StringBuilder).GetMethod("Append", new []{typeof(StringBuilder.AppendInterpolatedStringHandler)});
-#else
-    private static MethodInfo stringBuilderAppendMethod = typeof(StringBuilder).GetMethod("Append", new[] {typeof(string)});
-#endif
-
-    private static Func<T, StringBuilder, StringBuilder> GenerateStringBuilderMapFunc<T>(IEnumerable<PropertyInfo> typeProperties)
+    private static Action<T, TextWriter> GenerateStringBuilderMapFunc<T>(IEnumerable<PropertyInfo> typeProperties, IDatabaseAdapter databaseAdapter, string separator)
     {
         ParameterExpression entityParameter = Expression.Parameter(typeof(T));
-        ParameterExpression stringBuilderParameter = Expression.Parameter(typeof(StringBuilder));
+        ParameterExpression textWriterParameter = Expression.Parameter(typeof(TextWriter));
+
+        Expression writeNull = Expression.Call(textWriterParameter, TextWriterWriteMethod,
+            Expression.Constant(Constants.NullStr));
 
         bool firstProperty = true;
 
-        Expression expression = Expression.Call(
-            stringBuilderParameter,
-            stringBuilderAppendMethod,
-            Expression.Constant("("));
+        List<Expression> expressions = new List<Expression>();
 
         foreach (PropertyInfo typeProperty in typeProperties)
         {
-            ITypeMapper typeMapper = GetTypeMapper(typeProperty.PropertyType);
+            ITypeMapper typeMapper = databaseAdapter.GetTypeMapper(typeProperty.PropertyType);
 
             LambdaExpression typePropertyExpression = typeMapper.GetExpression();
 
@@ -194,11 +160,10 @@ public static partial class DommelBulkMapper
                 typePropertyExpression = Expression.Lambda(
                     Expression.Condition(
                         Expression.Equal(propertyTypeParameter, Expression.Constant(null)),
-                        Expression.Call(stringBuilderParameter, stringBuilderAppendMethod,
-                            Expression.Constant(Constants.NullStr)),
-                        Expression.Invoke(typeMapper.GetExpression(), typeMapperParameter, stringBuilderParameter)),
+                        writeNull,
+                        Expression.Invoke(typeMapper.GetExpression(), typeMapperParameter, textWriterParameter)),
                     propertyTypeParameter,
-                    stringBuilderParameter);
+                    textWriterParameter);
             }
             else
             {
@@ -213,21 +178,16 @@ public static partial class DommelBulkMapper
             }
             else
             {
-                expression = Expression.Call(expression, stringBuilderAppendMethod, Expression.Constant(", "));
+                expressions.Add(Expression.Call(textWriterParameter, TextWriterWriteMethod, Expression.Constant(separator)));
             }
 
-            expression = Expression.Invoke(typePropertyExpression, property, expression);
+            expressions.Add(Expression.Invoke(typePropertyExpression, property, textWriterParameter));
         }
 
-        expression = Expression.Call(
-            expression,
-            stringBuilderAppendMethod,
-            Expression.Constant(")"));
-
-        var lambdaExpression = Expression.Lambda<Func<T, StringBuilder, StringBuilder>>(
-            expression,
+        var lambdaExpression = Expression.Lambda<Action<T, TextWriter>>(
+            Expression.Block(expressions),
             entityParameter,
-            stringBuilderParameter);
+            textWriterParameter);
 
         return lambdaExpression.Compile();
     }

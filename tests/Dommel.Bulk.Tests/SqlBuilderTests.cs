@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Bogus.DataSets;
+using Dommel.Bulk.DatabaseAdapters;
 using Dommel.Bulk.Tests.Common;
 using Newtonsoft.Json;
 using Xunit;
@@ -12,6 +13,7 @@ namespace Dommel.Bulk.Tests;
 public class SqlBuilderTests
 {
     private readonly ISqlBuilder _sqlBuilder = new MySqlSqlBuilder();
+    private readonly IDatabaseAdapter _databaseAdapter = new MySqlDatabaseAdapter();
     private readonly IReadOnlyList<Person>? _people;
     private readonly IReadOnlyList<AllTypesEntity>? _allTypes;
 
@@ -50,7 +52,7 @@ public class SqlBuilderTests
     [Fact]
     public void SqlBuilderPersonTest()
     {
-        var sql = DommelBulkMapper.BuildInsertQuery(_sqlBuilder, _people);
+        var sql = DommelBulkMapper.BuildInsertQuery(_sqlBuilder, _databaseAdapter, _people);
 
         Assert.Equal(@"INSERT INTO `people` (`ref`, `first_name`, `last_name`, `gender`, `age`, `birth_day`) VALUES
 ('971af92c-f70e-4916-99e0-03c916cf8b70', 'Marcos', 'Hilll', 0, 46, '1952-04-18 19:32:19.440141'),
@@ -73,7 +75,7 @@ public class SqlBuilderTests
     [Fact]
     public void SqlBuilderAllTypesTest()
     {
-        var sql = DommelBulkMapper.BuildInsertQuery(_sqlBuilder, _allTypes);
+        var sql = DommelBulkMapper.BuildInsertQuery(_sqlBuilder, _databaseAdapter, _allTypes);
 
 #if NET6_0_OR_GREATER
         Assert.Equal(@"INSERT INTO `AllTypesEntities` (`Id`, `Ref`, `Short`, `ShortNull`, `UShort`, `UShortNull`, `Int`, `IntNull`, `UInt`, `UIntNull`, `Long`, `LongNull`, `ULong`, `ULongNull`, `Decimal`, `DecimalNull`, `Float`, `FloatNull`, `Double`, `DoubleNull`, `Byte`, `ByteNull`, `SByte`, `SByteNull`, `Bool`, `BoolNull`, `Char`, `CharNull`, `String`, `StringNull`, `Enum`, `EnumNull`, `DateTime`, `DateTimeNull`, `TimeSpan`, `TimeSpanNull`, `ByteArray`, `ByteArrayNull`) VALUES

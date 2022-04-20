@@ -1,11 +1,8 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+﻿using System.Data;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Dapper;
-using Dommel.Bulk.Extensions;
-using Dommel.Bulk.TypeMap;
 
 namespace Dommel.Bulk;
 
@@ -44,8 +41,8 @@ public static partial class DommelBulkMapper
         return connection.ExecuteAsync(new CommandDefinition(sql.Query, sql.Parameters, transaction: transaction, cancellationToken: cancellationToken));
     }
 
-    private static void LogQuery<T>(string query, [CallerMemberName] string? method = null)
-        => DommelMapper.LogReceived?.Invoke(method != null ? $"{method}<{typeof(T).Name}>: {query}" : query);
+    private static void LogQuery<T>(string? query, [CallerMemberName] string? method = null)
+        => DommelMapper.LogReceived?.Invoke(method != null ? $"{method}<{typeof(T).Name}>: {query}" : query ?? string.Empty);
 
     internal static SqlQuery BuildInsertParametersQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
     {
@@ -68,7 +65,20 @@ public static partial class DommelBulkMapper
 
         var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder, false));
 
-        sb.AppendJoin(", ", columnNames);
+        bool isFirst = true;
+        foreach (string columnName in columnNames)
+        {
+            if (isFirst)
+            {
+                isFirst = false;
+            }
+            else
+            {
+                sb.Append(", ");
+            }
+
+            sb.Append(columnName);
+        }
         sb.AppendLine(") VALUES");
 
         int line = 1;

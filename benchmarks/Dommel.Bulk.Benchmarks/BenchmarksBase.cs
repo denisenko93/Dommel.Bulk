@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System.Linq.Expressions;
+using BenchmarkDotNet.Attributes;
 using Dommel.Bulk.Tests.Common;
 
 namespace Dommel.Bulk.Benchmarks;
@@ -15,6 +16,8 @@ public class BenchmarksBase
     [GlobalSetup]
     public virtual void Setup()
     {
+        TextWriter tw = new StringWriter();
+
         data = Enumerable.Range(0, DataSize).Select(x => FakeGenerators.AllTypesFaker.Generate()).ToArray();
     }
 }

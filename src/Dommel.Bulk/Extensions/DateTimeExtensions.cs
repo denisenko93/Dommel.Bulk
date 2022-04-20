@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Runtime.CompilerServices;
 
 namespace Dommel.Bulk.Extensions;
 
@@ -101,29 +98,19 @@ internal static class DateTimeExtensions
 
         WriteFourDecimalDigits(year, destination);
         destination[4] = '-';
-        WriteTwoDecimalDigits(month, destination, 5);
+        month.WriteTwoDecimalDigits(destination, 5);
         destination[7] = '-';
-        WriteTwoDecimalDigits(day, destination, 8);
+        day.WriteTwoDecimalDigits(destination, 8);
         destination[10] = ' ';
-        WriteTwoDecimalDigits(hour, destination, 11);
+        hour.WriteTwoDecimalDigits(destination, 11);
         destination[13] = ':';
-        WriteTwoDecimalDigits(minute, destination, 14);
+        minute.WriteTwoDecimalDigits(destination, 14);
         destination[16] = ':';
-        WriteTwoDecimalDigits(second, destination, 17);
+        second.WriteTwoDecimalDigits(destination, 17);
         destination[19] = '.';
-        WriteDigits(tick/10, destination.Slice(20, 6));
+        ((ulong)(tick/10)).WriteDigits(destination.Slice(20, 6));
 
         return true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteTwoDecimalDigits(int value, Span<char> destination, int offset)
-    {
-
-        int temp = '0' + value;
-        value /= 10;
-        destination[offset + 1] = (char)(temp - (value * 10));
-        destination[offset] = (char)('0' + value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -142,21 +129,5 @@ internal static class DateTimeExtensions
         buffer[startingIndex + 1] = (char)(temp - (value * 10));
 
         buffer[startingIndex] = (char)('0' + value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteDigits(int value, Span<char> buffer)
-    {
-        // We can mutate the 'value' parameter since it's a copy-by-value local.
-        // It'll be used to represent the value left over after each division by 10.
-
-        for (int i = buffer.Length - 1; i >= 1; i--)
-        {
-            long temp = '0' + value;
-            value /= 10;
-            buffer[i] = (char)(temp - (value * 10));
-        }
-
-        buffer[0] = (char)('0' + value);
     }
 }

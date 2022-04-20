@@ -1,6 +1,6 @@
 ﻿namespace Dommel.Bulk;
 
-public static class Constants
+internal static class Constants
 {
     public const string NullStr = "NULL";
 }

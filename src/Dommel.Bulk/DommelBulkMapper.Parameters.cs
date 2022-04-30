@@ -15,8 +15,10 @@ public static partial class DommelBulkMapper
     /// <param name="connection">The connection to the database. This can either be open or closed.</param>
     /// <param name="entities">The entities to be inserted.</param>
     /// <param name="transaction">Optional transaction for the command.</param>
+    /// <param name="flags">flags enables extended behaviours</param>
+    /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
-    public static int BulkInsertParameters<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null)
+    public static int BulkInsertParameters<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
         where TEntity : class
     {
         var sql = BuildInsertParametersQuery(DommelMapper.GetSqlBuilder(connection), entities);
@@ -32,8 +34,10 @@ public static partial class DommelBulkMapper
     /// <param name="entities">The entities to be inserted.</param>
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <param name="cancellationToken">Optional cancellation token for the command.</param>
+    /// <param name="flags">flags enables extended behaviours</param>
+    /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
-    public static Task<int> BulkInsertParametersAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public static Task<int> BulkInsertParametersAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
         where TEntity : class
     {
         var sql = BuildInsertParametersQuery(DommelMapper.GetSqlBuilder(connection), entities);
@@ -106,18 +110,5 @@ public static partial class DommelBulkMapper
         sb.Append(";");
 
         return new SqlQuery(sb.ToString(), parameters);
-    }
-
-    internal class SqlQuery
-    {
-        public SqlQuery(string query, DynamicParameters parameters)
-        {
-            Query = query;
-            Parameters = parameters;
-        }
-
-        public string Query { get; }
-
-        public DynamicParameters Parameters { get; }
     }
 }

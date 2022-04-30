@@ -1,4 +1,6 @@
-﻿using Dommel.Bulk.TypeMap;
+﻿using System.Reflection;
+using Dapper;
+using Dommel.Bulk.TypeMap;
 
 namespace Dommel.Bulk.DatabaseAdapters;
 
@@ -33,5 +35,127 @@ public abstract class DatabaseAdapterBase : IDatabaseAdapter
     public void AddTypeMapper<T>(GenericTypeMapper<T> genericTypeMapper)
     {
         _typeMappers[typeof(T)] = genericTypeMapper;
+    }
+
+    /// <summary>
+    /// Returns NULL text
+    /// </summary>
+    /// <returns>NULL text</returns>
+    public virtual string GetNullStr() => "NULL";
+
+    public virtual SqlQuery BuildBulkInsertQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities, ExecutionFlags flags, string[] propertiesToUpdate)
+    {
+        Type type = typeof(T);
+
+        string tableName = Resolvers.Table(type, sqlBuilder);
+
+        bool insertDatabaseGeneratedKeys = (flags & ExecutionFlags.InsertDatabaseGeneratedKeys) == ExecutionFlags.InsertDatabaseGeneratedKeys;
+
+        ColumnPropertyInfo[] keyProperties = Resolvers.KeyProperties(type);
+        PropertyInfo[] propertiesToUse = Resolvers.Properties(type)
+            .Where(x => !x.IsGenerated || keyProperties.Contains(x))
+            .Select(x => x.Property)
+            .ToArray();
+
+        var propertiesToInsert = insertDatabaseGeneratedKeys
+            ? propertiesToUse.ToArray()
+            : propertiesToUse
+                .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property))
+                .ToArray();
+
+        TextWriter tw = new StringWriter();
+        DynamicParameters parameters = new DynamicParameters();
+
+        BuildInsertHeader<T>(tw, sqlBuilder, flags, propertiesToUpdate);
+
+        tw.Write(" INTO ");
+        tw.Write(tableName);
+        tw.Write(" (");
+
+        var columnNamesToInsert = propertiesToInsert.Select(p => Resolvers.Column(p, sqlBuilder, false));
+
+        bool isFirst = true;
+        foreach (string columnName in columnNamesToInsert)
+        {
+            if (isFirst)
+            {
+                isFirst = false;
+            }
+            else
+            {
+                tw.Write(", ");
+            }
+
+            tw.Write(columnName);
+        }
+        tw.WriteLine(") VALUES");
+
+        int line = 1;
+        foreach (T entity in entities)
+        {
+            if (line != 1)
+            {
+                tw.WriteLine(",");
+            }
+
+            tw.Write("(");
+
+            isFirst = true;
+            foreach (PropertyInfo typeProperty in propertiesToInsert)
+            {
+                if (isFirst)
+                {
+                    isFirst = false;
+                }
+                else
+                {
+                    tw.Write(", ");
+                }
+
+                string parameterName = sqlBuilder.PrefixParameter($"{typeProperty.Name}_{line}");
+
+                parameters.Add(parameterName, typeProperty.GetValue(entity));
+
+                tw.Write(parameterName);
+            }
+
+            tw.Write(")");
+
+            line++;
+        }
+
+        bool hasUpdateFlag = (flags & ExecutionFlags.UpdateIfExists) == ExecutionFlags.UpdateIfExists;
+
+        IEnumerable<PropertyInfo> propertyInfosToUpdate;
+
+        if (propertiesToUpdate?.Length > 0)
+        {
+            propertyInfosToUpdate = propertiesToUse
+                .Where(x => propertiesToUpdate.Contains(x.Name));
+        }
+        else if(hasUpdateFlag)
+        {
+            propertyInfosToUpdate = propertiesToUse
+                .Where(x => keyProperties.All(y => y.Property != x));
+        }
+        else
+        {
+            propertyInfosToUpdate = Array.Empty<PropertyInfo>();
+        }
+
+        BuildInsertFooter<T>(tw, sqlBuilder, flags, propertyInfosToUpdate);
+
+        tw.Write(";");
+
+        return new SqlQuery(tw.ToString(), parameters);
+    }
+
+    protected virtual void BuildInsertHeader<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags, string[] propertiesToUpdate)
+    {
+        textWriter.Write("INSERT");
+    }
+
+    protected virtual void BuildInsertFooter<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags, IEnumerable<PropertyInfo> propertiesToUpdate)
+    {
     }
 }

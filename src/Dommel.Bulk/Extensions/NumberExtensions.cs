@@ -125,4 +125,22 @@ internal static class NumberExtensions
         ulong quotient = left / right;
         return (quotient, left - (quotient * right));
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void WriteFourDecimalDigits(this int value, Span<char> buffer, int startingIndex = 0)
+    {
+        int temp = '0' + value;
+        value /= 10;
+        buffer[startingIndex + 3] = (char)(temp - (value * 10));
+
+        temp = '0' + value;
+        value /= 10;
+        buffer[startingIndex + 2] = (char)(temp - (value * 10));
+
+        temp = '0' + value;
+        value /= 10;
+        buffer[startingIndex + 1] = (char)(temp - (value * 10));
+
+        buffer[startingIndex] = (char)('0' + value);
+    }
 }

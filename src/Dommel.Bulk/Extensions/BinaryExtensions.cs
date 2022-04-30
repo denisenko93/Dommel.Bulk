@@ -34,24 +34,29 @@ internal static class BinaryExtensions
         return true;
     }
 
-    public static unsafe void WriteHexString(Span<byte> bytes, char* target)
+    public static unsafe void WriteHexString(Span<byte> bytes, Span<char> target)
     {
         var lookupP = _lookup32UnsafeP;
-        fixed (byte* bytesP = bytes){
-            uint* targetP2 = (uint*)target;
-            for (int i = 0; i < bytes.Length; i++) {
-                targetP2[i] = lookupP[bytesP[i]];
+        fixed (byte* bytesP = bytes)
+        fixed (char* targetP2 = target)
+        {
+            uint* targetUintP = (uint*) targetP2;
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                targetUintP[i] = lookupP[bytesP[i]];
             }
         }
     }
 
-    public static unsafe void WriteHexStringReverse(Span<byte> bytes, char* target)
+    public static unsafe void WriteHexStringReverse(Span<byte> bytes, Span<char> target)
     {
         var lookupP = _lookup32UnsafeP;
-        fixed (byte* bytesP = bytes){
-            uint* targetP2 = (uint*)target;
+        fixed (byte* bytesP = bytes)
+        fixed (char* targetP2 = target)
+        {
+            uint* targetUintP = (uint*) targetP2;
             for (int i = bytes.Length - 1; i >= 0; i--) {
-                targetP2[bytes.Length - 1 - i] = lookupP[bytesP[i]];
+                targetUintP[bytes.Length - 1 - i] = lookupP[bytesP[i]];
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using Dommel.Bulk.Extensions;
 using Dommel.Bulk.TypeMap;
 
@@ -36,5 +37,50 @@ public class MySqlDatabaseAdapter : DatabaseAdapterBase
     public MySqlDatabaseAdapter()
         : base(TypeMappers)
     {
+    }
+
+    protected override void BuildInsertHeader<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags,
+        string[] propertiesToUpdate)
+    {
+        base.BuildInsertHeader<T>(textWriter, sqlBuilder, flags, propertiesToUpdate);
+
+        if ((flags & ExecutionFlags.IgnoreErrors) == ExecutionFlags.IgnoreErrors)
+        {
+            textWriter.Write(" IGNORE");
+        }
+    }
+
+    protected override void BuildInsertFooter<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags,
+        IEnumerable<PropertyInfo> propertiesToUpdate)
+    {
+        var properties = propertiesToUpdate?.ToArray() ?? Array.Empty<PropertyInfo>();
+
+        base.BuildInsertFooter<T>(textWriter, sqlBuilder, flags, properties);
+
+        if (properties.Length > 0)
+        {
+            textWriter.WriteLine();
+            textWriter.Write("ON DUPLICATE KEY UPDATE ");
+
+            bool isFirst = true;
+            foreach (PropertyInfo propertyToUpdate in properties)
+            {
+                if (isFirst)
+                {
+                    isFirst = false;
+                }
+                else
+                {
+                    textWriter.Write(", ");
+                }
+
+                string columnName = Resolvers.Column(propertyToUpdate, sqlBuilder, false);
+
+                textWriter.Write(columnName);
+                textWriter.Write(" = VALUES(");
+                textWriter.Write(columnName);
+                textWriter.Write(")");
+            }
+        }
     }
 }

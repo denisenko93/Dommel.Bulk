@@ -1,11 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using Dapper;
 using Dommel.Bulk.DatabaseAdapters;
-using Dommel.Bulk.Extensions;
 using Dommel.Bulk.TypeMap;
 
 namespace Dommel.Bulk;
@@ -21,9 +19,11 @@ public static partial class DommelBulkMapper
     /// <param name="connection">The connection to the database. This can either be open or closed.</param>
     /// <param name="entities">The entities to be inserted.</param>
     /// <param name="transaction">Optional transaction for the command.</param>
+    /// <param name="flags">flags enables extended behaviours</param>
+    /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
     public static int BulkInsert<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities,
-        IDbTransaction? transaction = null)
+        IDbTransaction? transaction = null, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
         where TEntity : class
     {
         var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), GetDatabaseAdapter(connection), entities);
@@ -39,9 +39,11 @@ public static partial class DommelBulkMapper
     /// <param name="entities">The entities to be inserted.</param>
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <param name="cancellationToken">Optional cancellation token for the command.</param>
+    /// <param name="flags">flags enables extended behaviours</param>
+    /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
     public static Task<int> BulkInsertAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities,
-        IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+        IDbTransaction? transaction = null, CancellationToken cancellationToken = default, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
         where TEntity : class
     {
         var sql = BuildInsertQuery(DommelMapper.GetSqlBuilder(connection), GetDatabaseAdapter(connection), entities);
@@ -131,7 +133,7 @@ public static partial class DommelBulkMapper
         ParameterExpression textWriterParameter = Expression.Parameter(typeof(TextWriter));
 
         Expression writeNull = Expression.Call(textWriterParameter, TextWriterWriteMethod,
-            Expression.Constant(Constants.NullStr));
+            Expression.Constant(databaseAdapter.GetNullStr()));
 
         bool firstProperty = true;
 

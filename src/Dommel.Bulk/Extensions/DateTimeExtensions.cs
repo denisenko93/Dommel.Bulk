@@ -96,7 +96,7 @@ internal static class DateTimeExtensions
         dateTime.GetDate(out int year, out int month, out int day);
         dateTime.GetTimePrecise(out int hour, out int minute, out int second, out int tick);
 
-        WriteFourDecimalDigits(year, destination);
+        year.WriteFourDecimalDigits(destination);
         destination[4] = '-';
         month.WriteTwoDecimalDigits(destination, 5);
         destination[7] = '-';
@@ -111,23 +111,5 @@ internal static class DateTimeExtensions
         ((ulong)(tick/10)).WriteDigits(destination.Slice(20, 6));
 
         return true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteFourDecimalDigits(int value, Span<char> buffer, int startingIndex = 0)
-    {
-        int temp = '0' + value;
-        value /= 10;
-        buffer[startingIndex + 3] = (char)(temp - (value * 10));
-
-        temp = '0' + value;
-        value /= 10;
-        buffer[startingIndex + 2] = (char)(temp - (value * 10));
-
-        temp = '0' + value;
-        value /= 10;
-        buffer[startingIndex + 1] = (char)(temp - (value * 10));
-
-        buffer[startingIndex] = (char)('0' + value);
     }
 }

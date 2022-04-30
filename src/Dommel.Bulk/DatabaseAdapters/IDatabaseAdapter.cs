@@ -22,4 +22,10 @@ public interface IDatabaseAdapter
     /// <param name="genericTypeMapper">Custom implementation of <see cref="GenericTypeMapper{T}"/></param>
     /// <typeparam name="T">Type to map</typeparam>
     void AddTypeMapper<T>(GenericTypeMapper<T> genericTypeMapper);
+
+    /// <summary>
+    /// Returns NULL text
+    /// </summary>
+    /// <returns>NULL text</returns>
+    public string GetNullStr();
 }

@@ -18,36 +18,36 @@ internal static class GuidExtensions
 
         MemoryMarshal.TryWrite(bytes, ref guid);
 
-        unsafe
-        {
-            fixed (char* destinationReference = &MemoryMarshal.GetReference(destination))
-            {
-                char* p = destinationReference;
 #if BIGENDIAN
-                BinaryExtensions.WriteHexString(bytes.Slice(0, 4), p);
-                p += 8;
-                *p++ = '-';
-                BinaryExtensions.WriteHexString(bytes.Slice(4, 2), p);
-                p += 4;
-                *p++ = '-';
-                BinaryExtensions.WriteHexString(bytes.Slice(6, 2), p);
+        BinaryExtensions.WriteHexString(bytes.Slice(0, 4), destination);
+        destination = destination.Slice(8);
+        destination[0] = '-';
+        destination = destination.Slice(1);
+        BinaryExtensions.WriteHexString(bytes.Slice(4, 2), destination);
+        destination = destination.Slice(4);
+        destination[0] = '-';
+        destination = destination.Slice(1);
+        BinaryExtensions.WriteHexString(bytes.Slice(6, 2), destination);
 #else
-                BinaryExtensions.WriteHexStringReverse(bytes.Slice(0, 4), p);
-                p += 8;
-                *p++ = '-';
-                BinaryExtensions.WriteHexStringReverse(bytes.Slice(4, 2), p);
-                p += 4;
-                *p++ = '-';
-                BinaryExtensions.WriteHexStringReverse(bytes.Slice(6, 2), p);
+        BinaryExtensions.WriteHexStringReverse(bytes.Slice(0, 4), destination);
+
+        destination = destination.Slice(8);
+        destination[0] = '-';
+        destination = destination.Slice(1);
+        BinaryExtensions.WriteHexStringReverse(bytes.Slice(4, 2), destination);
+        destination = destination.Slice(4);
+        destination[0] = '-';
+        destination = destination.Slice(1);
+        BinaryExtensions.WriteHexStringReverse(bytes.Slice(6, 2), destination);
 #endif
-                p += 4;
-                *p++ = '-';
-                BinaryExtensions.WriteHexString(bytes.Slice(8, 2), p);
-                p += 4;
-                *p++ = '-';
-                BinaryExtensions.WriteHexString(bytes.Slice(10, 6), p);
-            }
-        }
+        destination = destination.Slice(4);
+        destination[0] = '-';
+        destination = destination.Slice(1);
+        BinaryExtensions.WriteHexString(bytes.Slice(8, 2), destination);
+        destination = destination.Slice(4);
+        destination[0] = '-';
+        destination = destination.Slice(1);
+        BinaryExtensions.WriteHexString(bytes.Slice(10, 6), destination);
 
         return true;
     }

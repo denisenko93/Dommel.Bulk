@@ -50,6 +50,7 @@ Dommel.Bulk supports flags that allow additional database functionality to contr
 | `InsertDatabaseGeneratedKeys` | Insert auto increment keys into database |
 | `UpdateIfExists` | Update rows in database when they exist. This flag is enabled if `propertiesToUpdate` exists |
 | `IgnoreErrors` | Ignore duplicate keys or unique index errors |
+
 Example:
 ```csharp
 await _connection.BulkInsertAsync(data, flags: ExecutionFlags.IgnoreErrors);

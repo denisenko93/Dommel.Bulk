@@ -17,7 +17,7 @@ dotnet add package Dommel.Bulk
 Install-Package Dommel.Bulk
 ```
 
-## Using Dommel.Bulk
+## Dommel.Bulk basic usage
 
 ### Bulk insert using type mappers
 ```cs
@@ -31,18 +31,55 @@ int insertedCount = await connection.BulkInsertParametersAsync<Product>(products
 ```
 Use SQL parameters for insert values. Support for all databases. Has middle performance.
 
-## Type mappers
+## Dommel.Bulk extended usage
 
+### Transaction
+All extension methods supports database transaction usage. Example:
+```csharp
+using (IDbTransaction transaction = _connection.BeginTransaction())
+{
+    await _connection.BulkInsertAsync(data, transaction);
+}
+```
+### ExecutionFlags
+Dommel.Bulk supports flags that allow additional database functionality to control bulk insertion.
+
+| Flag | Description                         |
+|------|-------------------------------------|
+| `None`   | Does not use extended functionality |
+| `InsertDatabaseGeneratedKeys` | Insert auto increment keys into database |
+| `UpdateIfExists` | Update rows in database when they exist. This flag is enabled if `propertiesToUpdate` exists |
+| `IgnoreErrors` | Ignore duplicate keys or unique index errors |
+Example:
+```csharp
+await _connection.BulkInsertAsync(data, flags: ExecutionFlags.IgnoreErrors);
+```
+### Properties to update
+You can specify which properties to update if there are conflicts when inserting.
+```csharp
+await _connection.BulkInsertAsync(data, null, default, null, flags: ExecutionFlags.IgnoreErrors, nameof(Person.FirstName), nameof(Person.LastName));
+```
+
+## Type mappers
+Mapping C# Types to Database Type Literals
 Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `Guid`, `string`, `TimeSpan`, `byte[]`, enum types and nullable types.
+
 ## Async and non-async
 All Dommel.Bulk methods have async and non-async variants, such as as `BulkInsert` & `BulkInsertAsync`, `BulkInsertParameters` & `BulkInsertParametersAsync`.
 
-## Extensibility
-#### TypeMapper
+## Database adapters
+Represents a concrete implementation of a database abstraction. Supports only MySql implementation
 
-Use the `AddTypeMapper()` method to register the custom type mapper:
+## Extensibility
+### Type mapper
+Use the `AddTypeMapper()` method to register the custom type mapper.
 ```cs
-AddTypeMapper(typeof(JObject), new GenericTypeMapper<JObject>((x, y) => y.Append('\'').AppendEscapeMysql(x.ToString()).Append('\'')));
+DommelBulkMapper.AddTypeMapper(typeof(MySqlConnection), new GenericTypeMapper<JsonElement>((e, tw) => tw.Write(e.ToString())));
+```
+### Database adapter
+Use the `AddTypeMapper()` method to register the custom type mapper.
+```csharp
+DommelBulkMapper.AddDatabaseAdapter(typeof(NpgsqlConnection), new NpgDatabaseAdapter());
 ```
 
 ## Performance

@@ -1,4 +1,5 @@
-﻿using Dommel.Bulk.TypeMap;
+﻿using Dommel.Bulk.RowMap;
+using Dommel.Bulk.TypeMap;
 
 namespace Dommel.Bulk.DatabaseAdapters;
 
@@ -28,4 +29,6 @@ public interface IDatabaseAdapter
     /// </summary>
     /// <returns>NULL text</returns>
     public string GetNullStr();
+
+    SqlQuery BuildBulkInsertQuery<T>(ISqlBuilder sqlBuilder, IRowMapper rowMapper, IEnumerable<T> entities, ExecutionFlags flags, string[] propertiesToUpdate);
 }

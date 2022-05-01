@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Runtime.CompilerServices;
 using Dommel.Bulk.DatabaseAdapters;
 using Dommel.Bulk.TypeMap;
 
@@ -62,4 +63,7 @@ public static partial class DommelBulkMapper
     {
         return DatabaseAdapters[connection.GetType().Name];
     }
+
+    private static void LogQuery<T>(string? query, [CallerMemberName] string? method = null)
+        => DommelMapper.LogReceived?.Invoke(method != null ? $"{method}<{typeof(T).Name}>: {query}" : query ?? string.Empty);
 }

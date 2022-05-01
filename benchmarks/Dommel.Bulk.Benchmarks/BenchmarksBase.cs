@@ -16,8 +16,6 @@ public class BenchmarksBase
     [GlobalSetup]
     public virtual void Setup()
     {
-        TextWriter tw = new StringWriter();
-
         data = Enumerable.Range(0, DataSize).Select(x => FakeGenerators.AllTypesFaker.Generate()).ToArray();
     }
 }

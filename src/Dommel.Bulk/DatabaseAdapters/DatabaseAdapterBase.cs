@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Dapper;
+using Dommel.Bulk.RowMap;
 using Dommel.Bulk.TypeMap;
 
 namespace Dommel.Bulk.DatabaseAdapters;
@@ -43,7 +44,7 @@ public abstract class DatabaseAdapterBase : IDatabaseAdapter
     /// <returns>NULL text</returns>
     public virtual string GetNullStr() => "NULL";
 
-    public virtual SqlQuery BuildBulkInsertQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities, ExecutionFlags flags, string[] propertiesToUpdate)
+    public virtual SqlQuery BuildBulkInsertQuery<T>(ISqlBuilder sqlBuilder, IRowMapper rowMapper, IEnumerable<T> entities, ExecutionFlags flags, string[] propertiesToUpdate)
     {
         Type type = typeof(T);
 
@@ -90,39 +91,17 @@ public abstract class DatabaseAdapterBase : IDatabaseAdapter
         }
         tw.WriteLine(") VALUES");
 
-        int line = 1;
-        foreach (T entity in entities)
-        {
-            if (line != 1)
-            {
-                tw.WriteLine(",");
-            }
-
-            tw.Write("(");
-
-            isFirst = true;
-            foreach (PropertyInfo typeProperty in propertiesToInsert)
-            {
-                if (isFirst)
-                {
-                    isFirst = false;
-                }
-                else
-                {
-                    tw.Write(", ");
-                }
-
-                string parameterName = sqlBuilder.PrefixParameter($"{typeProperty.Name}_{line}");
-
-                parameters.Add(parameterName, typeProperty.GetValue(entity));
-
-                tw.Write(parameterName);
-            }
-
-            tw.Write(")");
-
-            line++;
-        }
+        rowMapper.MapRows(
+            entities,
+            sqlBuilder,
+            this,
+            tw,
+            parameters,
+            propertiesToInsert,
+            ", ",
+            $",{Environment.NewLine}",
+            "(",
+            ")");
 
         bool hasUpdateFlag = (flags & ExecutionFlags.UpdateIfExists) == ExecutionFlags.UpdateIfExists;
 

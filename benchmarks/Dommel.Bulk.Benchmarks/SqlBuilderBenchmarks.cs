@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Dommel.Bulk.DatabaseAdapters;
+using Dommel.Bulk.RowMap;
 
 namespace Dommel.Bulk.Benchmarks;
 
@@ -11,12 +12,14 @@ public class SqlBuilderBenchmarks : BenchmarksBase
     [Benchmark, BenchmarkCategory("simple")]
     public void SqlBuilderBenchmark()
     {
-        DommelBulkMapper.BuildInsertQuery(_sqlBuilder, _databaseAdapter, data);
+        IRowMapper rowMapper = new ExpressionRowMapper();
+        _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, data, ExecutionFlags.None, Array.Empty<string>());
     }
 
     [Benchmark, BenchmarkCategory("parameters")]
     public void SqlBuilderParametersBenchmark()
     {
-        DommelBulkMapper.BuildInsertParametersQuery(_sqlBuilder, data);
+        IRowMapper rowMapper = new ParametersRowMapper();
+        _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, data, ExecutionFlags.None, Array.Empty<string>());
     }
 }

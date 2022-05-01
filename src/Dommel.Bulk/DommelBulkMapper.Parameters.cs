@@ -1,13 +1,12 @@
 ﻿using System.Data;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Dapper;
+using Dommel.Bulk.RowMap;
 
 namespace Dommel.Bulk;
 
 public static partial class DommelBulkMapper
 {
+    private static ParametersRowMapper _parametersRowMapper = new ParametersRowMapper();
+
     /// <summary>
     /// Bulk inserts the specified collection of entities into the database.
     /// </summary>
@@ -21,9 +20,7 @@ public static partial class DommelBulkMapper
     public static int BulkInsertParameters<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
         where TEntity : class
     {
-        var sql = BuildInsertParametersQuery(DommelMapper.GetSqlBuilder(connection), entities);
-        LogQuery<TEntity>(sql.Query);
-        return connection.Execute(sql.Query, sql.Parameters, transaction);
+        return BulkInsert(connection, entities, transaction, _parametersRowMapper, flags, propertiesToUpdate);
     }
 
     /// <summary>
@@ -40,75 +37,8 @@ public static partial class DommelBulkMapper
     public static Task<int> BulkInsertParametersAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
         where TEntity : class
     {
-        var sql = BuildInsertParametersQuery(DommelMapper.GetSqlBuilder(connection), entities);
-        LogQuery<TEntity>(sql.Query);
-        return connection.ExecuteAsync(new CommandDefinition(sql.Query, sql.Parameters, transaction: transaction, cancellationToken: cancellationToken));
+        return BulkInsertAsync(connection, entities, transaction, cancellationToken, _parametersRowMapper, flags, propertiesToUpdate);
     }
 
-    private static void LogQuery<T>(string? query, [CallerMemberName] string? method = null)
-        => DommelMapper.LogReceived?.Invoke(method != null ? $"{method}<{typeof(T).Name}>: {query}" : query ?? string.Empty);
 
-    internal static SqlQuery BuildInsertParametersQuery<T>(ISqlBuilder sqlBuilder, IEnumerable<T> entities)
-    {
-        Type type = typeof(T);
-
-        var tableName = Resolvers.Table(type, sqlBuilder);
-
-        // Use all non-key and non-generated properties for inserts
-        var keyProperties = Resolvers.KeyProperties(type);
-        var typeProperties = Resolvers.Properties(type)
-            .Where(x => !x.IsGenerated)
-            .Select(x => x.Property)
-            .Except(keyProperties.Where(p => p.IsGenerated).Select(p => p.Property))
-            .ToArray();
-
-        StringBuilder sb = new StringBuilder();
-        DynamicParameters parameters = new DynamicParameters();
-
-        sb.AppendFormat("INSERT INTO {0} (", tableName);
-
-        var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder, false));
-
-        bool isFirst = true;
-        foreach (string columnName in columnNames)
-        {
-            if (isFirst)
-            {
-                isFirst = false;
-            }
-            else
-            {
-                sb.Append(", ");
-            }
-
-            sb.Append(columnName);
-        }
-        sb.AppendLine(") VALUES");
-
-        int line = 1;
-
-        foreach (T entity in entities)
-        {
-            sb.Append("(");
-
-            foreach (PropertyInfo typeProperty in typeProperties)
-            {
-                string parameterName = sqlBuilder.PrefixParameter($"{typeProperty.Name}_{line}");
-
-                parameters.Add(parameterName, typeProperty.GetValue(entity));
-
-                sb.AppendFormat("{0}, ", parameterName);
-            }
-
-            sb.Remove(sb.Length - 2, 2);
-
-            sb.AppendLine("),");
-            line++;
-        }
-
-        sb.Remove(sb.Length - 3, 3);
-        sb.Append(";");
-
-        return new SqlQuery(sb.ToString(), parameters);
-    }
 }

@@ -1,6 +1,10 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
 using Dapper;
 using MySqlConnector;
+using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
 
@@ -25,7 +29,9 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase
                 created_on datetime not null,
                 full_name varchar(600) GENERATED ALWAYS AS (CONCAT(first_name, ' ', last_name)),
 
-                primary key(id)
+                primary key(id),
+
+                unique(first_name, last_name)
             );
 
             create trigger people_before_insert
@@ -91,7 +97,12 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase
                 `ByteArrayNull` blob null,
 
 
-                primary key(Id));");
+                primary key(Id));
+
+            CREATE TABLE string_value(
+                `id` int AUTO_INCREMENT,
+                `value` text not null,
+                PRIMARY KEY(`id`));");
         }
     }
 

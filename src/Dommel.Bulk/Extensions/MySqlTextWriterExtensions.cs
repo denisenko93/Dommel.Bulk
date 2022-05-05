@@ -1,8 +1,6 @@
-﻿using System.Text;
+﻿namespace Dommel.Bulk.Extensions;
 
-namespace Dommel.Bulk.Extensions;
-
-internal static class TextWriterExtensions
+internal static class MySqlTextWriterExtensions
 {
     private const string mysqlQuote = "'";
     private const string mysqlHexHeader = "0x";
@@ -21,7 +19,7 @@ internal static class TextWriterExtensions
 
         Span<char> target = stackalloc char[maxLength];
 
-        if(TryQuote(
+        if(TextWriterExtensionsHelper.TryQuote(
             target,
             (string source, Span<char> span, out int i) => source.AsSpan().TryEscapeMysql(span, out i),
             value,
@@ -66,7 +64,7 @@ internal static class TextWriterExtensions
 
         ReadOnlySpan<char> quotes = quote ? mysqlQuote.AsSpan() : default;
 
-        if(TryQuote(
+        if(TextWriterExtensionsHelper.TryQuote(
                charArray,
                (DateTime source, Span<char> target, out int writtenInternal) => source.TryFormatMysqlDate(target, out writtenInternal),
                dateTime,
@@ -93,7 +91,7 @@ internal static class TextWriterExtensions
 
         ReadOnlySpan<char> quotes = quote ? mysqlQuote.AsSpan() : default;
 
-        if(TryQuote(
+        if(TextWriterExtensionsHelper.TryQuote(
                charArray,
                ((Guid source, Span<char> target, out int charsWritten) => source.TryFormat(target, out charsWritten)),
                guid,
@@ -122,7 +120,7 @@ internal static class TextWriterExtensions
     {
         Span<char> target = stackalloc char[bytes.Length * 2 + mysqlHexHeader.Length];
 
-        if(TryQuoteSpan(target,
+        if(TextWriterExtensionsHelper.TryQuoteSpan(target,
                (Span<byte> source, Span<char> span, out int written) => source.TryWriteHexString(span, out written),
                bytes,
                quote ? mysqlHexHeader.AsSpan() : default,
@@ -143,7 +141,7 @@ internal static class TextWriterExtensions
 
         ReadOnlySpan<char> quotes = quote ? mysqlQuote.AsSpan() : default;
 
-        if(TryQuote(
+        if(TextWriterExtensionsHelper.TryQuote(
                charArray,
                ((TimeSpan source, Span<char> target, out int charsWritten) => source.TryFormatMysql(target, out charsWritten)),
                timeSpan,
@@ -167,14 +165,14 @@ internal static class TextWriterExtensions
         }
     }
 
-#if NET6_0_OR_GREATER
+    #if NET6_0_OR_GREATER
     public static void WriteMysqlDateOnly(this TextWriter textWriter, DateOnly dateOnly, bool quote)
     {
         Span<char> charArray = stackalloc char[20];
 
         ReadOnlySpan<char> quotes = quote ? mysqlQuote.AsSpan() : default;
 
-        if(TryQuote(
+        if(TextWriterExtensionsHelper.TryQuote(
                charArray,
                ((DateOnly source, Span<char> target, out int charsWritten) => source.TryFormat(target, out charsWritten)),
                dateOnly,
@@ -204,7 +202,7 @@ internal static class TextWriterExtensions
 
         ReadOnlySpan<char> quotes = quote ? mysqlQuote.AsSpan() : default;
 
-        if(TryQuote(
+        if(TextWriterExtensionsHelper.TryQuote(
                charArray,
                ((TimeOnly source, Span<char> target, out int charsWritten) => source.TryFormat(target, out charsWritten)),
                timeOnly,
@@ -228,76 +226,4 @@ internal static class TextWriterExtensions
         }
     }
 #endif
-
-    private delegate bool TryQuoteSpanFunc<T>(Span<T> source, Span<char> target, out int written);
-
-    private static bool TryQuoteSpan<T>(Span<char> span, TryQuoteSpanFunc<T> writeFunc, Span<T> source, ReadOnlySpan<char> startQuote, ReadOnlySpan<char> endQuote, out int written)
-    {
-        if (startQuote.Length > 0)
-        {
-            if (span.Length < startQuote.Length)
-            {
-                written = 0;
-                return false;
-            }
-
-            startQuote.CopyTo(span);
-            span = span.Slice(startQuote.Length);
-        }
-
-        if (!writeFunc(source, span, out int writtenInternal))
-        {
-            written = 0;
-            return false;
-        }
-
-        if (endQuote.Length > 0)
-        {
-            if (span.Length < writtenInternal + endQuote.Length)
-            {
-                written = 0;
-                return false;
-            }
-            endQuote.CopyTo(span.Slice(writtenInternal));
-        }
-
-        written = writtenInternal + startQuote.Length + endQuote.Length;
-        return true;
-    }
-
-    private delegate bool TryQuoteFunc<in T>(T source, Span<char> target, out int written);
-
-    private static bool TryQuote<T>(Span<char> span, TryQuoteFunc<T> writeFunc, T source, ReadOnlySpan<char> startQuote, ReadOnlySpan<char> endQuote, out int written)
-    {
-        if (startQuote.Length > 0)
-        {
-            if (span.Length < startQuote.Length)
-            {
-                written = 0;
-                return false;
-            }
-
-            startQuote.CopyTo(span);
-            span = span.Slice(startQuote.Length);
-        }
-
-        if (!writeFunc(source, span, out int writtenInternal))
-        {
-            written = 0;
-            return false;
-        }
-
-        if (endQuote.Length > 0)
-        {
-            if (span.Length < writtenInternal + endQuote.Length)
-            {
-                written = 0;
-                return false;
-            }
-            endQuote.CopyTo(span.Slice(writtenInternal));
-        }
-
-        written = writtenInternal + startQuote.Length + endQuote.Length;
-        return true;
-    }
 }

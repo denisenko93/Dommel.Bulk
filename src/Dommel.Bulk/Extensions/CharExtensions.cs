@@ -28,4 +28,21 @@ internal static class CharExtensions
             _ => null
         };
     }
+
+    public static string? EscapePostgreSql(this char c)
+    {
+        return c switch
+        {
+            (char) 26 => ZString,
+            '\0' => ZeroString,
+            '\'' => QuoteString,
+            '"' => DoubleQuoteString,
+            '\b' => BString,
+            '\n' => NString,
+            '\r' => RString,
+            '\t' => TString,
+            '\\' => SlashString,
+            _ => null
+        };
+    }
 }

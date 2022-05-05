@@ -112,4 +112,39 @@ internal static class DateTimeExtensions
 
         return true;
     }
+    public static bool TryFormatPostgreSqlDate(this DateTime dateTime, Span<char> destination, out int written)
+    {
+        const int MinimumCharsNeeded = 26;
+
+        if (destination.Length < MinimumCharsNeeded)
+        {
+            written = 0;
+            return false;
+        }
+
+        written = MinimumCharsNeeded;
+
+        // Hoist most of the bounds checks on destination.
+        { _ = destination[MinimumCharsNeeded - 1]; }
+
+        dateTime.GetDate(out int year, out int month, out int day);
+        dateTime.GetTimePrecise(out int hour, out int minute, out int second, out int tick);
+
+        year.WriteFourDecimalDigits(destination);
+        destination[4] = '-';
+        month.WriteTwoDecimalDigits(destination, 5);
+        destination[7] = '-';
+        day.WriteTwoDecimalDigits(destination, 8);
+        destination[10] = ' ';
+        hour.WriteTwoDecimalDigits(destination, 11);
+        destination[13] = ':';
+        minute.WriteTwoDecimalDigits(destination, 14);
+        destination[16] = ':';
+        second.WriteTwoDecimalDigits(destination, 17);
+        destination[19] = '.';
+        ((ulong)(tick/10)).WriteDigits(destination.Slice(20, 6));
+
+        return true;
+    }
+
 }

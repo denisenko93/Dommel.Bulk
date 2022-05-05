@@ -12,7 +12,8 @@ public static partial class DommelBulkMapper
 {
     private static Dictionary<string, IDatabaseAdapter> DatabaseAdapters = new Dictionary<string, IDatabaseAdapter>(StringComparer.InvariantCultureIgnoreCase)
     {
-        ["MySqlConnection"] = new MySqlDatabaseAdapter()
+        ["MySqlConnection"] = new MySqlDatabaseAdapter(),
+        ["NpgsqlConnection"] = new PostgreSqlDatabaseAdapter()
     };
 
     /// <summary>

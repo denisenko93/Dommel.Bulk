@@ -14,7 +14,8 @@ namespace Dommel.Bulk.Tests;
 public class SqlBuilderTests
 {
     private readonly ISqlBuilder _sqlBuilder = new MySqlSqlBuilder();
-    private readonly IDatabaseAdapter _databaseAdapter = new MySqlDatabaseAdapter();
+    private readonly IDatabaseAdapter _mySqlDatabaseAdapter = new MySqlDatabaseAdapter();
+    private readonly IDatabaseAdapter _postgresDatabaseAdapter = new PostgreSqlDatabaseAdapter();
     private readonly IReadOnlyList<Person> _people;
     private readonly IReadOnlyList<AllTypesEntity> _allTypes;
 
@@ -29,7 +30,7 @@ public class SqlBuilderTests
     {
         IRowMapper rowMapper = new ParametersRowMapper();
 
-        var sql = _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _people, ExecutionFlags.None, Array.Empty<string>());
+        var sql = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _people, ExecutionFlags.None, Array.Empty<string>());
 
         Assert.Equal(@"INSERT INTO `people` (`ref`, `first_name`, `last_name`, `gender`, `age`, `birth_day`) VALUES
 (@Ref_1, @FirstName_1, @LastName_1, @Gender_1, @Age_1, @BirthDay_1),
@@ -57,7 +58,7 @@ public class SqlBuilderTests
     {
         IRowMapper rowMapper = new ExpressionRowMapper();
 
-        var query = _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _people, ExecutionFlags.None, Array.Empty<string>());
+        var query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _people, ExecutionFlags.None, Array.Empty<string>());
 
         Assert.Equal(@"INSERT INTO `people` (`ref`, `first_name`, `last_name`, `gender`, `age`, `birth_day`) VALUES
 ('971af92c-f70e-4916-99e0-03c916cf8b70', 'Marcos', 'Hilll', 0, 46, '1952-04-18 19:32:19.440141'),
@@ -69,7 +70,7 @@ public class SqlBuilderTests
     {
         IRowMapper rowMapper = new ParametersRowMapper();
 
-        var query = _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _allTypes, ExecutionFlags.None, Array.Empty<string>());
+        var query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _allTypes, ExecutionFlags.None, Array.Empty<string>());
 
         Assert.Equal(@"INSERT INTO `AllTypesEntities` (`Id`, `Ref`, `Short`, `ShortNull`, `UShort`, `UShortNull`, `Int`, `IntNull`, `UInt`, `UIntNull`, `Long`, `LongNull`, `ULong`, `ULongNull`, `Decimal`, `DecimalNull`, `Float`, `FloatNull`, `Double`, `DoubleNull`, `Byte`, `ByteNull`, `SByte`, `SByteNull`, `Bool`, `BoolNull`, `Char`, `CharNull`, `String`, `StringNull`, `Enum`, `EnumNull`, `DateTime`, `DateTimeNull`, `TimeSpan`, `TimeSpanNull`, `ByteArray`, `ByteArrayNull`) VALUES
 (@Id_1, @Ref_1, @Short_1, @ShortNull_1, @UShort_1, @UShortNull_1, @Int_1, @IntNull_1, @UInt_1, @UIntNull_1, @Long_1, @LongNull_1, @ULong_1, @ULongNull_1, @Decimal_1, @DecimalNull_1, @Float_1, @FloatNull_1, @Double_1, @DoubleNull_1, @Byte_1, @ByteNull_1, @SByte_1, @SByteNull_1, @Bool_1, @BoolNull_1, @Char_1, @CharNull_1, @String_1, @StringNull_1, @Enum_1, @EnumNull_1, @DateTime_1, @DateTimeNull_1, @TimeSpan_1, @TimeSpanNull_1, @ByteArray_1, @ByteArrayNull_1),
@@ -84,7 +85,7 @@ public class SqlBuilderTests
     {
         IRowMapper rowMapper = new ExpressionRowMapper();
 
-        var query = _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _allTypes, ExecutionFlags.None, Array.Empty<string>());
+        var query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _allTypes, ExecutionFlags.None, Array.Empty<string>());
 
 #if NET6_0_OR_GREATER
         Assert.Equal(@"INSERT INTO `AllTypesEntities` (`Id`, `Ref`, `Short`, `ShortNull`, `UShort`, `UShortNull`, `Int`, `IntNull`, `UInt`, `UIntNull`, `Long`, `LongNull`, `ULong`, `ULongNull`, `Decimal`, `DecimalNull`, `Float`, `FloatNull`, `Double`, `DoubleNull`, `Byte`, `ByteNull`, `SByte`, `SByteNull`, `Bool`, `BoolNull`, `Char`, `CharNull`, `String`, `StringNull`, `Enum`, `EnumNull`, `DateTime`, `DateTimeNull`, `TimeSpan`, `TimeSpanNull`, `ByteArray`, `ByteArrayNull`) VALUES

@@ -3,21 +3,19 @@
 public static class PostgreSqlTextWriterExtensions
 {
     private const string postgreQuote = "'";
-    private const string postgreHexHeader = "0x";
+    private const string postgreStringStartQuote = "E'";
 
     public static void WritePostgreSqlDateTime(this TextWriter textWriter, DateTime dateTime, bool quote)
     {
-        int resultLength = quote ? 26 + (postgreQuote.Length * 2) : 26;
+        int resultLength = quote ? 26 + (postgreQuote.Length + postgreQuote.Length) : 26;
         Span<char> charArray = stackalloc char[resultLength];
-
-        ReadOnlySpan<char> quotes = quote ? postgreQuote.AsSpan() : default;
 
         if (TextWriterExtensionsHelper.TryQuote(
                 charArray,
                 (DateTime source, Span<char> target, out int writtenInternal) => source.TryFormatPostgreSqlDate(target, out writtenInternal),
                 dateTime,
-                quotes,
-                quotes,
+                quote ? postgreQuote.AsSpan() : default,
+                quote ? postgreQuote.AsSpan() : default,
                 out int written))
         {
             textWriter.WriteSpan(charArray.Slice(0, written));
@@ -36,13 +34,16 @@ public static class PostgreSqlTextWriterExtensions
     {
         int maxLength = value.Length * 2;
 
-        ReadOnlySpan<char> quotes = default;
+        ReadOnlySpan<char> startQuote = default;
+        ReadOnlySpan<char> endQuote = default;
 
         if (quote)
         {
-            maxLength += (postgreQuote.Length * 2);
-            quotes = postgreQuote.AsSpan();
+            startQuote = postgreStringStartQuote.AsSpan();
+            endQuote = postgreQuote.AsSpan();
         }
+
+        maxLength += (startQuote.Length + endQuote.Length);
 
         Span<char> target = stackalloc char[maxLength];
 
@@ -50,8 +51,8 @@ public static class PostgreSqlTextWriterExtensions
                 target,
                 (string source, Span<char> span, out int i) => source.AsSpan().TryEscapePostgre(span, out i),
                 value,
-                quotes,
-                quotes,
+                startQuote,
+                endQuote,
                 out int written))
         {
             textWriter.WriteSpan(target.Slice(0, written));
@@ -68,7 +69,7 @@ public static class PostgreSqlTextWriterExtensions
 
         if (quote)
         {
-            textWriter.Write(postgreQuote);
+            textWriter.Write(postgreStringStartQuote);
         }
 
         if (escaped == null)
@@ -83,55 +84,6 @@ public static class PostgreSqlTextWriterExtensions
         if (quote)
         {
             textWriter.Write(postgreQuote);
-        }
-    }
-
-    public static void WritePostgreSqlTimeSpan(this TextWriter textWriter, TimeSpan timeSpan, bool quote)
-    {
-        Span<char> charArray = stackalloc char[20];
-
-        ReadOnlySpan<char> quotes = quote ? postgreQuote.AsSpan() : default;
-
-        if(TextWriterExtensionsHelper.TryQuote(
-               charArray,
-               ((TimeSpan source, Span<char> target, out int charsWritten) => source.TryFormatPostgreSql(target, out charsWritten)),
-               timeSpan,
-               quotes,
-               quotes,
-               out int written))
-        {
-            textWriter.WriteSpan(charArray.Slice(0, written));
-        }
-        else
-        {
-            if (quote)
-            {
-                textWriter.Write(postgreQuote);
-            }
-            textWriter.Write((int) timeSpan.TotalHours);
-            textWriter.Write(timeSpan.ToString("\\:mm\\:ss\\.ffffff"));if (quote)
-            {
-                textWriter.Write(postgreQuote);
-            }
-        }
-    }
-
-    public static void WritePostgreSqlHexString(this TextWriter textWriter, Span<byte> bytes, bool quote)
-    {
-        Span<char> target = stackalloc char[bytes.Length * 2 + postgreHexHeader.Length];
-
-        if(TextWriterExtensionsHelper.TryQuoteSpan(target,
-               (Span<byte> source, Span<char> span, out int written) => source.TryWriteHexString(span, out written),
-               bytes,
-               quote ? postgreHexHeader.AsSpan() : default,
-               default,
-               out int charsWritten))
-        {
-            textWriter.WriteSpan(target.Slice(0, charsWritten));
-        }
-        else
-        {
-            throw new FormatException($"Error by escape Postgre chars. Source length: {bytes.Length}. Target length: {target.Length}. Chars written: {charsWritten}");
         }
     }
 }

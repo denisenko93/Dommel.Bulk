@@ -10,6 +10,7 @@ internal static class CharExtensions
     private const string NString = "\\n";
     private const string RString = "\\r";
     private const string TString = "\\t";
+    private const string FString = "\\f";
     private const string SlashString = "\\\\";
 
     public static string? EscapeMySql(this char c)
@@ -33,10 +34,9 @@ internal static class CharExtensions
     {
         return c switch
         {
-            (char) 26 => ZString,
+            '\f' => FString,
             '\0' => ZeroString,
             '\'' => QuoteString,
-            '"' => DoubleQuoteString,
             '\b' => BString,
             '\n' => NString,
             '\r' => RString,

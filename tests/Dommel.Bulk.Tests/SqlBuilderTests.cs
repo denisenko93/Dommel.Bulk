@@ -17,16 +17,18 @@ public class SqlBuilderTests
     private readonly IDatabaseAdapter _mySqlDatabaseAdapter = new MySqlDatabaseAdapter();
     private readonly IDatabaseAdapter _postgresDatabaseAdapter = new PostgreSqlDatabaseAdapter();
     private readonly IReadOnlyList<Person> _people;
-    private readonly IReadOnlyList<AllTypesEntity> _allTypes;
+    private readonly IReadOnlyList<MySqlAllTypesEntity> _mySqlAllTypes;
+    private readonly IReadOnlyList<PostgreSqlAllTypesEntity> _postgreSqlAllTypes;
 
     public SqlBuilderTests()
     {
         _people = JsonConvert.DeserializeObject<Person[]>(File.ReadAllText("people.json")) ?? Array.Empty<Person>();
-        _allTypes = JsonConvert.DeserializeObject<AllTypesEntity[]>(File.ReadAllText("all_types.json")) ?? Array.Empty<AllTypesEntity>();
+        _mySqlAllTypes = JsonConvert.DeserializeObject<MySqlAllTypesEntity[]>(File.ReadAllText("all_types.json")) ?? Array.Empty<MySqlAllTypesEntity>();
+        _postgreSqlAllTypes = JsonConvert.DeserializeObject<PostgreSqlAllTypesEntity[]>(File.ReadAllText("all_types.json")) ?? Array.Empty<PostgreSqlAllTypesEntity>();
     }
 
     [Fact]
-    public void ParametersSqlBuilderPersonTest()
+    public void MySqlParametersSqlBuilderPersonTest()
     {
         IRowMapper rowMapper = new ParametersRowMapper();
 
@@ -54,7 +56,7 @@ public class SqlBuilderTests
     }
 
     [Fact]
-    public void SqlBuilderPersonTest()
+    public void MySqlSqlBuilderPersonTest()
     {
         IRowMapper rowMapper = new ExpressionRowMapper();
 
@@ -66,11 +68,11 @@ public class SqlBuilderTests
     }
 
     [Fact]
-    public void ParametersSqlBuilderAllTypesTest()
+    public void MySqlParametersSqlBuilderAllTypesTest()
     {
         IRowMapper rowMapper = new ParametersRowMapper();
 
-        var query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _allTypes, ExecutionFlags.None, Array.Empty<string>());
+        var query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _mySqlAllTypes, ExecutionFlags.None, Array.Empty<string>());
 
         Assert.Equal(@"INSERT INTO `AllTypesEntities` (`Id`, `Ref`, `Short`, `ShortNull`, `UShort`, `UShortNull`, `Int`, `IntNull`, `UInt`, `UIntNull`, `Long`, `LongNull`, `ULong`, `ULongNull`, `Decimal`, `DecimalNull`, `Float`, `FloatNull`, `Double`, `DoubleNull`, `Byte`, `ByteNull`, `SByte`, `SByteNull`, `Bool`, `BoolNull`, `Char`, `CharNull`, `String`, `StringNull`, `Enum`, `EnumNull`, `DateTime`, `DateTimeNull`, `TimeSpan`, `TimeSpanNull`, `ByteArray`, `ByteArrayNull`) VALUES
 (@Id_1, @Ref_1, @Short_1, @ShortNull_1, @UShort_1, @UShortNull_1, @Int_1, @IntNull_1, @UInt_1, @UIntNull_1, @Long_1, @LongNull_1, @ULong_1, @ULongNull_1, @Decimal_1, @DecimalNull_1, @Float_1, @FloatNull_1, @Double_1, @DoubleNull_1, @Byte_1, @ByteNull_1, @SByte_1, @SByteNull_1, @Bool_1, @BoolNull_1, @Char_1, @CharNull_1, @String_1, @StringNull_1, @Enum_1, @EnumNull_1, @DateTime_1, @DateTimeNull_1, @TimeSpan_1, @TimeSpanNull_1, @ByteArray_1, @ByteArrayNull_1),
@@ -81,11 +83,11 @@ public class SqlBuilderTests
     }
 
     [Fact]
-    public void SqlBuilderAllTypesTest()
+    public void MySqlSqlBuilderAllTypesTest()
     {
         IRowMapper rowMapper = new ExpressionRowMapper();
 
-        var query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _allTypes, ExecutionFlags.None, Array.Empty<string>());
+        var query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, _mySqlAllTypes, ExecutionFlags.None, Array.Empty<string>());
 
 #if NET6_0_OR_GREATER
         Assert.Equal(@"INSERT INTO `AllTypesEntities` (`Id`, `Ref`, `Short`, `ShortNull`, `UShort`, `UShortNull`, `Int`, `IntNull`, `UInt`, `UIntNull`, `Long`, `LongNull`, `ULong`, `ULongNull`, `Decimal`, `DecimalNull`, `Float`, `FloatNull`, `Double`, `DoubleNull`, `Byte`, `ByteNull`, `SByte`, `SByteNull`, `Bool`, `BoolNull`, `Char`, `CharNull`, `String`, `StringNull`, `Enum`, `EnumNull`, `DateTime`, `DateTimeNull`, `TimeSpan`, `TimeSpanNull`, `ByteArray`, `ByteArrayNull`) VALUES

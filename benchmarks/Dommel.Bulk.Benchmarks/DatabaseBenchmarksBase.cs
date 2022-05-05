@@ -58,7 +58,7 @@ public abstract class DatabaseBenchmarksBase : SqlBuilderBenchmarks
     [IterationCleanup]
     public void Cleanup()
     {
-        _connection.DeleteAll<AllTypesEntity>();
+        _connection.DeleteAll<MySqlAllTypesEntity>();
     }
 
     protected abstract void SetupDatabase(IDbConnection connection);

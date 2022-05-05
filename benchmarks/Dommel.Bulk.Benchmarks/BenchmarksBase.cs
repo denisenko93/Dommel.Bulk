@@ -8,7 +8,7 @@ namespace Dommel.Bulk.Benchmarks;
 [MemoryDiagnoser()]
 public class BenchmarksBase
 {
-    protected IReadOnlyCollection<AllTypesEntity> data;
+    protected IReadOnlyCollection<MySqlAllTypesEntity> data;
 
     [Params(10_000)]
     public virtual int DataSize { get; set; }
@@ -16,6 +16,6 @@ public class BenchmarksBase
     [GlobalSetup]
     public virtual void Setup()
     {
-        data = Enumerable.Range(0, DataSize).Select(x => FakeGenerators.AllTypesFaker.Generate()).ToArray();
+        data = Enumerable.Range(0, DataSize).Select(x => FakeGenerators.MySqlTypesFaker.Generate()).ToArray();
     }
 }

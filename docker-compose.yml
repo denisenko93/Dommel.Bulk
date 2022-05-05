@@ -7,7 +7,7 @@ services:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: dommel_bulk_test
+      MYSQL_DATABASE: test
   postgres:
     image: postgres:alpine
     container_name: postgres

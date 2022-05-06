@@ -17,10 +17,16 @@ public static partial class DommelBulkMapper
     /// <param name="flags">flags enables extended behaviours</param>
     /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
-    public static int BulkInsertParameters<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
+    public static int BulkInsertParameters<TEntity>(
+        this IDbConnection connection,
+        IEnumerable<TEntity> entities,
+        IDbTransaction? transaction = null,
+        ExecutionFlags flags = ExecutionFlags.None,
+        string constraintName = null,
+        params string[] propertiesToUpdate)
         where TEntity : class
     {
-        return BulkInsert(connection, entities, transaction, _parametersRowMapper, flags, propertiesToUpdate);
+        return BulkInsert(connection, entities, transaction, _parametersRowMapper, flags, constraintName, propertiesToUpdate);
     }
 
     /// <summary>
@@ -34,10 +40,25 @@ public static partial class DommelBulkMapper
     /// <param name="flags">flags enables extended behaviours</param>
     /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
-    public static Task<int> BulkInsertParametersAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction = null, CancellationToken cancellationToken = default, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
+    public static Task<int> BulkInsertParametersAsync<TEntity>(
+        this IDbConnection connection,
+        IEnumerable<TEntity> entities,
+        IDbTransaction? transaction = null,
+        CancellationToken cancellationToken = default,
+        ExecutionFlags flags = ExecutionFlags.None,
+        string constraintName = null,
+        params string[] propertiesToUpdate)
         where TEntity : class
     {
-        return BulkInsertAsync(connection, entities, transaction, cancellationToken, _parametersRowMapper, flags, propertiesToUpdate);
+        return BulkInsertAsync(
+            connection,
+            entities,
+            transaction,
+            cancellationToken,
+            _parametersRowMapper,
+            flags,
+            constraintName,
+            propertiesToUpdate);
     }
 
 

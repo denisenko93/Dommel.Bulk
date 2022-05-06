@@ -28,7 +28,7 @@ public interface IDatabaseAdapter
     /// Returns NULL text
     /// </summary>
     /// <returns>NULL text</returns>
-    public string GetNullStr();
+    string GetNullStr();
 
-    SqlQuery BuildBulkInsertQuery<T>(ISqlBuilder sqlBuilder, IRowMapper rowMapper, IEnumerable<T> entities, ExecutionFlags flags, string[] propertiesToUpdate);
+    SqlQuery BuildBulkInsertQuery<T>(ISqlBuilder sqlBuilder, IRowMapper rowMapper, IEnumerable<T> entities, ExecutionFlags flags, string[] propertiesToUpdate, string constraintName);
 }

@@ -3,6 +3,10 @@
     <PropertyGroup>
         <PackageId>Dommel.Bulk</PackageId>
         <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+        <VersionPrefix>2.0.0</VersionPrefix>
+        <VersionSuffix>beta</VersionSuffix>
+        <PackageReleaseNotes>Added support for extended behavior when inserting data into a database.
+            Added limited support for PostgreSQL database</PackageReleaseNotes>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>10</LangVersion>

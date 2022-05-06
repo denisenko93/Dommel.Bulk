@@ -268,6 +268,33 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
         }
     }
 
+    [Fact]
+    public async Task UniqueUpdateIfExistsTest()
+    {
+        using (IDbConnection connection = GetOpenConnection())
+        {
+            await connection.DeleteAllAsync<Person>();
+
+            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
+
+            persons[0].FirstName = "Hello";
+            persons[0].LastName = "world";
+
+            persons[1].FirstName = "Hello";
+            persons[1].LastName = "world";
+
+            await connection.BulkInsertAsync(persons, flags: ExecutionFlags.UpdateIfExists);
+
+            IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
+
+            Assert.Single(peopleFromDb);
+
+            AssertPersonEqual(peopleFromDb.First(), persons[1]);
+
+            await connection.DeleteAllAsync<Person>();
+        }
+    }
+
     protected override IDbConnection GetConnection()
     {
         return new MySqlConnection($"Server=localhost;Database=test;Uid=root;Pwd=root;UseAffectedRows=false;");

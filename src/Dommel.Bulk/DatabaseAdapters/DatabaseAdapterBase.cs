@@ -44,7 +44,13 @@ public abstract class DatabaseAdapterBase : IDatabaseAdapter
     /// <returns>NULL text</returns>
     public virtual string GetNullStr() => "NULL";
 
-    public virtual SqlQuery BuildBulkInsertQuery<T>(ISqlBuilder sqlBuilder, IRowMapper rowMapper, IEnumerable<T> entities, ExecutionFlags flags, string[] propertiesToUpdate)
+    public virtual SqlQuery BuildBulkInsertQuery<T>(
+        ISqlBuilder sqlBuilder,
+        IRowMapper rowMapper,
+        IEnumerable<T> entities,
+        ExecutionFlags flags,
+        string[] propertiesToUpdate,
+        string constraintName)
     {
         Type type = typeof(T);
 
@@ -67,7 +73,7 @@ public abstract class DatabaseAdapterBase : IDatabaseAdapter
         TextWriter tw = new StringWriter();
         DynamicParameters parameters = new DynamicParameters();
 
-        BuildInsertHeader<T>(tw, sqlBuilder, flags, propertiesToUpdate);
+        BuildInsertHeader<T>(tw, sqlBuilder, flags, propertiesToUpdate, constraintName);
 
         tw.Write(" INTO ");
         tw.Write(tableName);
@@ -122,19 +128,19 @@ public abstract class DatabaseAdapterBase : IDatabaseAdapter
             propertyInfosToUpdate = Array.Empty<PropertyInfo>();
         }
 
-        BuildInsertFooter<T>(tw, sqlBuilder, flags, propertyInfosToUpdate);
+        BuildInsertFooter<T>(tw, sqlBuilder, flags, propertyInfosToUpdate, constraintName);
 
         tw.Write(";");
 
         return new SqlQuery(tw.ToString(), parameters);
     }
 
-    protected virtual void BuildInsertHeader<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags, string[] propertiesToUpdate)
+    protected virtual void BuildInsertHeader<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags, string[] propertiesToUpdate, string constraintName)
     {
         textWriter.Write("INSERT");
     }
 
-    protected virtual void BuildInsertFooter<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags, IEnumerable<PropertyInfo> propertiesToUpdate)
+    protected virtual void BuildInsertFooter<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags, IEnumerable<PropertyInfo> propertiesToUpdate, string constraintName)
     {
     }
 }

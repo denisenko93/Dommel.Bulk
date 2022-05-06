@@ -19,14 +19,27 @@ public static partial class DommelBulkMapper
     /// <param name="flags">flags enables extended behaviours</param>
     /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
-    public static int BulkInsert<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities,
-        IDbTransaction? transaction = null, IRowMapper? rowMapper = null, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
+    public static int BulkInsert<TEntity>(
+        this IDbConnection connection,
+        IEnumerable<TEntity> entities,
+        IDbTransaction? transaction = null,
+        IRowMapper? rowMapper = null,
+        ExecutionFlags flags = ExecutionFlags.None,
+        string constraintName = null,
+        params string[] propertiesToUpdate)
         where TEntity : class
     {
         IDatabaseAdapter databaseAdapter = GetDatabaseAdapter(connection);
         ISqlBuilder sqlBuilder = DommelMapper.GetSqlBuilder(connection);
 
-        SqlQuery query = databaseAdapter.BuildBulkInsertQuery(sqlBuilder, rowMapper ?? _expressionRowMapper, entities, flags, propertiesToUpdate);
+        SqlQuery query = databaseAdapter.BuildBulkInsertQuery(
+            sqlBuilder,
+            rowMapper ?? _expressionRowMapper,
+            entities,
+            flags,
+            propertiesToUpdate,
+            constraintName);
+
         LogQuery<TEntity>(query.Query);
         return connection.Execute(query.Query, query.Parameters, transaction);
     }
@@ -42,14 +55,28 @@ public static partial class DommelBulkMapper
     /// <param name="flags">flags enables extended behaviours</param>
     /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
-    public static Task<int> BulkInsertAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities,
-        IDbTransaction? transaction = null, CancellationToken cancellationToken = default, IRowMapper? rowMapper = null, ExecutionFlags flags = ExecutionFlags.None, params string[] propertiesToUpdate)
+    public static Task<int> BulkInsertAsync<TEntity>(
+        this IDbConnection connection,
+        IEnumerable<TEntity> entities,
+        IDbTransaction? transaction = null,
+        CancellationToken cancellationToken = default,
+        IRowMapper? rowMapper = null,
+        ExecutionFlags flags = ExecutionFlags.None,
+        string constraintName = null,
+        params string[] propertiesToUpdate)
         where TEntity : class
     {
         IDatabaseAdapter databaseAdapter = GetDatabaseAdapter(connection);
         ISqlBuilder sqlBuilder = DommelMapper.GetSqlBuilder(connection);
 
-        SqlQuery query = databaseAdapter.BuildBulkInsertQuery(sqlBuilder, rowMapper ?? _expressionRowMapper, entities, flags, propertiesToUpdate);
+        SqlQuery query = databaseAdapter.BuildBulkInsertQuery(
+            sqlBuilder,
+            rowMapper ?? _expressionRowMapper,
+            entities,
+            flags,
+            propertiesToUpdate,
+            constraintName);
+
         LogQuery<TEntity>(query.Query);
         return connection.ExecuteAsync(new CommandDefinition(query.Query, query.Parameters, transaction: transaction, cancellationToken: cancellationToken));
     }

@@ -27,9 +27,51 @@ public class PostgreSqlDatabaseAdapter : DatabaseAdapterBase
     {
     }
 
-    protected override void BuildInsertFooter<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags,
-        IEnumerable<PropertyInfo> propertiesToUpdate)
+    protected override void BuildInsertFooter<T>(
+        TextWriter textWriter, ISqlBuilder sqlBuilder,
+        ExecutionFlags flags,
+        IEnumerable<PropertyInfo> propertiesToUpdate,
+        string constraintName)
     {
+        PropertyInfo[] properties = propertiesToUpdate?.ToArray() ?? Array.Empty<PropertyInfo>();
+
+        if (properties.Length > 0 && (flags & ExecutionFlags.IgnoreErrors) == ExecutionFlags.IgnoreErrors)
+        {
+            throw new InvalidOperationException("PostgreSql does not support the combination of the ExecutionFlags.UpdateIfExists and ExecutionFlags.IgnoreErrors flags.");
+        }
+
+        if (properties.Length > 0 && string.IsNullOrEmpty(constraintName))
+        {
+            throw new InvalidOperationException("To update values on conflicts constraintName must be filled.");
+        }
+
+        if (properties.Length > 0)
+        {
+            textWriter.WriteLine();
+            textWriter.Write("ON CONFLICT ON CONSTRAINT ");
+            textWriter.Write(sqlBuilder.QuoteIdentifier(constraintName));
+            textWriter.Write(" DO UPDATE SET ");
+
+            bool isFirst = true;
+            foreach (PropertyInfo propertyInfo in properties)
+            {
+                if (isFirst)
+                {
+                    isFirst = false;
+                }
+                else
+                {
+                    textWriter.Write(", ");
+                }
+
+                string columnName = Resolvers.Column(propertyInfo, sqlBuilder, false);
+
+                textWriter.Write(columnName);
+                textWriter.Write(" = EXCLUDED.");
+                textWriter.Write(columnName);
+            }
+        }
+
         if ((flags & ExecutionFlags.IgnoreErrors) == ExecutionFlags.IgnoreErrors)
         {
             textWriter.WriteLine();

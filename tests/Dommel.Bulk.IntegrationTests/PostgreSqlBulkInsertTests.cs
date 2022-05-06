@@ -34,8 +34,7 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
                                 ELSE first_name || ' ' || last_name END) stored,
                  primary key(id),
 
-                 unique (first_name, last_name),
-                 unique (ref)
+                 CONSTRAINT name_unique unique (first_name, last_name)
              );
 
              create table ""AllTypesEntities""(
@@ -112,35 +111,30 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
         }
     }
 
-    [Fact(Skip = "future")]
-    public async Task DoubleUniqueUpdateIfExistsIgnoreErrorsTest()
+    [Fact]
+    public async Task UniqueUpdateIfExistsTest()
     {
         using (IDbConnection connection = GetOpenConnection())
         {
             await connection.DeleteAllAsync<Person>();
 
-            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(4).ToArray();
+            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
 
-            persons[0].Id = 1;
             persons[0].FirstName = "Hello";
             persons[0].LastName = "world";
 
-            persons[1].Id = 2;
+            persons[1].FirstName = "Hello";
+            persons[1].LastName = "world";
 
-            persons[2].Id = 2;
-            persons[2].FirstName = "Hello";
-            persons[2].LastName = "world";
+            await connection.InsertAsync(persons[0]);
 
-            persons[3].Id = 2;
-
-            await connection.BulkInsertAsync(persons, flags: ExecutionFlags.InsertDatabaseGeneratedKeys | ExecutionFlags.UpdateIfExists | ExecutionFlags.IgnoreErrors);
+            await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: "name_unique");
 
             IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
 
-            Assert.Equal(2, peopleFromDb.Count());
+            Assert.Single(peopleFromDb);
 
-            AssertPersonEqual(peopleFromDb.First(), persons[0]);
-            AssertPersonEqual(peopleFromDb.Skip(1).First(), persons[3]);
+            AssertPersonEqual(peopleFromDb.First(), persons[1]);
 
             await connection.DeleteAllAsync<Person>();
         }

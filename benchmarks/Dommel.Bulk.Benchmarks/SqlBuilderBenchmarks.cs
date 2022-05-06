@@ -13,13 +13,13 @@ public class SqlBuilderBenchmarks : BenchmarksBase
     public void SqlBuilderBenchmark()
     {
         IRowMapper rowMapper = new ExpressionRowMapper();
-        _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, data, ExecutionFlags.None, Array.Empty<string>());
+        _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, data, ExecutionFlags.None, Array.Empty<string>(), null);
     }
 
     [Benchmark, BenchmarkCategory("parameters")]
     public void SqlBuilderParametersBenchmark()
     {
         IRowMapper rowMapper = new ParametersRowMapper();
-        _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, data, ExecutionFlags.None, Array.Empty<string>());
+        _databaseAdapter.BuildBulkInsertQuery(_sqlBuilder, rowMapper, data, ExecutionFlags.None, Array.Empty<string>(), null);
     }
 }

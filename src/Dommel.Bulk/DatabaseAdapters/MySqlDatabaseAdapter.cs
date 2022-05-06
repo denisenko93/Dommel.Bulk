@@ -39,10 +39,14 @@ public class MySqlDatabaseAdapter : DatabaseAdapterBase
     {
     }
 
-    protected override void BuildInsertHeader<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags,
-        string[] propertiesToUpdate)
+    protected override void BuildInsertHeader<T>(
+        TextWriter textWriter,
+        ISqlBuilder sqlBuilder,
+        ExecutionFlags flags,
+        string[] propertiesToUpdate,
+        string constraintName)
     {
-        base.BuildInsertHeader<T>(textWriter, sqlBuilder, flags, propertiesToUpdate);
+        base.BuildInsertHeader<T>(textWriter, sqlBuilder, flags, propertiesToUpdate, constraintName);
 
         if ((flags & ExecutionFlags.IgnoreErrors) == ExecutionFlags.IgnoreErrors)
         {
@@ -50,12 +54,16 @@ public class MySqlDatabaseAdapter : DatabaseAdapterBase
         }
     }
 
-    protected override void BuildInsertFooter<T>(TextWriter textWriter, ISqlBuilder sqlBuilder, ExecutionFlags flags,
-        IEnumerable<PropertyInfo> propertiesToUpdate)
+    protected override void BuildInsertFooter<T>(
+        TextWriter textWriter,
+        ISqlBuilder sqlBuilder,
+        ExecutionFlags flags,
+        IEnumerable<PropertyInfo> propertiesToUpdate,
+        string constraintName)
     {
         var properties = propertiesToUpdate?.ToArray() ?? Array.Empty<PropertyInfo>();
 
-        base.BuildInsertFooter<T>(textWriter, sqlBuilder, flags, properties);
+        base.BuildInsertFooter<T>(textWriter, sqlBuilder, flags, properties, constraintName);
 
         if (properties.Length > 0)
         {

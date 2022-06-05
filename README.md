@@ -63,13 +63,13 @@ await _connection.BulkInsertAsync(data, null, default, null, flags: ExecutionFla
 
 ## Type mappers
 Mapping C# Types to Database Type Literals
-Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `Guid`, `string`, `TimeSpan`, `byte[]`, enum types and nullable types.
+Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `Guid`, `string`, `TimeSpan`, `byte[]`, `enum` and nullable types. For concrete type specification check sql provider.
 
 ## Async and non-async
 All Dommel.Bulk methods have async and non-async variants, such as as `BulkInsert` & `BulkInsertAsync`, `BulkInsertParameters` & `BulkInsertParametersAsync`.
 
 ## Database adapters
-Represents a concrete implementation of a database abstraction. Supports only MySql implementation
+Represents a concrete implementation of a database abstraction. Supports MySql and PostgreSql implementations.
 
 ## Extensibility
 ### Type mapper

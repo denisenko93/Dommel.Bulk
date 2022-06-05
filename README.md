@@ -1,7 +1,7 @@
-# Dommel.Bulk
+# Dommel.Bulk ⛓
 High performance insert data into database
 
-Dommel.Bulk provides a convenient API for bulk insert operations using extension methods on the `IDbConnection` interface. The SQL queries are generated based on your POCO entities. Dommel.Bulk translates you entities to SQL expressions. [Dapper](https://github.com/StackExchange/Dapper) is used for query execution and object mapping. [Dommel](https://github.com/henkmollema/Dommel) is used for table and column names conventions
+Dommel.Bulk provides a convenient API for bulk insert operations using extension methods on the `IDbConnection` interface. The SQL queries are generated based on your POCO entities. Dommel.Bulk translates you entities to SQL expressions. [Dapper](https://github.com/StackExchange/Dapper) is used for query execution and object mapping. [Dommel](https://github.com/henkmollema/Dommel) is used for table and column names conventions.
 
 ## Installing Dommel.Bulk
 
@@ -23,7 +23,7 @@ Install-Package Dommel.Bulk
 ```cs
 var products = await connection.BulkInsertAsync<Product>(products);
 ```
-Generate simple SQL expression using database specific type mappers. Supports MySql database. Has high performance.
+Generates simple SQL expression using database specific type mappers. Supports MySql and PostgreSql databases. Has high performance solutions inside.
 
 ### Bulk insert using SQL parameters
 ```cs

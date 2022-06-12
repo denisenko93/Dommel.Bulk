@@ -45,4 +45,20 @@ internal static class CharExtensions
             _ => null
         };
     }
+
+    public static string? EscapeSqLite(this char c)
+    {
+        return c switch
+        {
+            '\f' => FString,
+            '\0' => ZeroString,
+            '\'' => QuoteString,
+            '\b' => BString,
+            '\n' => NString,
+            '\r' => RString,
+            '\t' => TString,
+            '\\' => SlashString,
+            _ => null
+        };
+    }
 }

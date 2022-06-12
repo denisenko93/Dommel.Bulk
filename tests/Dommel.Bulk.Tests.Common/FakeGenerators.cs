@@ -74,4 +74,20 @@ public static class FakeGenerators
         .RuleFor(x => x.EnumNull, f => f.Random.Enum<DayOfWeek>().OrNull(f))
         .RuleFor(x => x.DateTime, f => f.Date.Recent())
         .RuleFor(x => x.DateTimeNull, f => f.Date.Future().OrNull(f));
+
+    public static readonly Faker<SqLiteAllTypesEntity> SqLiteTypesFaker = new Faker<SqLiteAllTypesEntity>()
+        .RuleFor(x => x.Id, f => Guid.NewGuid())
+        .RuleFor(x => x.Ref, f => Guid.NewGuid())
+        .RuleFor(x => x.Double, f => f.Random.Double())
+        .RuleFor(x => x.DoubleNull, f => f.Random.Double().OrNull(f))
+        .RuleFor(x => x.Bool, f => f.Random.Bool())
+        .RuleFor(x => x.BoolNull, f => f.Random.Bool().OrNull(f))
+        .RuleFor(x => x.Char, f => f.Random.Char(max: '\uD7FF'))
+        .RuleFor(x => x.CharNull, f => f.Random.Char(max: '\uD7FF').OrNull(f))
+        .RuleFor(x => x.String, f => f.Random.String2(100, 200, "abcdefghijklmnopqrstuvwxyz\f\r\n\t\b'\"\\"+(char)26))
+        .RuleFor(x => x.StringNull, f => f.Random.String2(100, 200, "abcdefghijklmnopqrstuvwxyz\f\r\n\t\b'\"\\"+(char)26).OrNull(f))
+        .RuleFor(x => x.Enum, f => f.Random.Enum<DayOfWeek>())
+        .RuleFor(x => x.EnumNull, f => f.Random.Enum<DayOfWeek>().OrNull(f))
+        .RuleFor(x => x.DateTime, f => f.Date.Recent())
+        .RuleFor(x => x.DateTimeNull, f => f.Date.Future().OrNull(f));
 }

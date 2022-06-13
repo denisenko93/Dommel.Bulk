@@ -16,15 +16,18 @@ public class SqlBuilderTests
     private readonly ISqlBuilder _sqlBuilder = new MySqlSqlBuilder();
     private readonly IDatabaseAdapter _mySqlDatabaseAdapter = new MySqlDatabaseAdapter();
     private readonly IDatabaseAdapter _postgresDatabaseAdapter = new PostgreSqlDatabaseAdapter();
+    private readonly IDatabaseAdapter _sqLiteDatabaseAdapter = new SqLiteDatabaseAdapter();
     private readonly IReadOnlyList<Person> _people;
     private readonly IReadOnlyList<MySqlAllTypesEntity> _mySqlAllTypes;
     private readonly IReadOnlyList<PostgreSqlAllTypesEntity> _postgreSqlAllTypes;
+    private readonly IReadOnlyList<SqLiteAllTypesEntity> _sqLiteSqlAllTypes;
 
     public SqlBuilderTests()
     {
         _people = JsonConvert.DeserializeObject<Person[]>(File.ReadAllText("people.json")) ?? Array.Empty<Person>();
         _mySqlAllTypes = JsonConvert.DeserializeObject<MySqlAllTypesEntity[]>(File.ReadAllText("all_types.json")) ?? Array.Empty<MySqlAllTypesEntity>();
         _postgreSqlAllTypes = JsonConvert.DeserializeObject<PostgreSqlAllTypesEntity[]>(File.ReadAllText("all_types.json")) ?? Array.Empty<PostgreSqlAllTypesEntity>();
+        _sqLiteSqlAllTypes = JsonConvert.DeserializeObject<SqLiteAllTypesEntity[]>(File.ReadAllText("all_types.json")) ?? Array.Empty<SqLiteAllTypesEntity>();
     }
 
     [Fact]

@@ -18,7 +18,6 @@ public class SqLiteDatabaseAdapter : DatabaseAdapterBase
         [typeof(long)] = new GenericTypeMapper<long>((x, tw) => tw.Write(x)),
         [typeof(decimal)] = new GenericTypeMapper<decimal>((x, tw) => tw.Write(x.ToString(CultureInfo.InvariantCulture))),
         [typeof(DateTime)] = new GenericTypeMapper<DateTime>((x, tw) => tw.WriteSqLiteDateTime(x, true)),
-        [typeof(Guid)] = new GenericTypeMapper<Guid>((x, tw) => tw.WriteGuid(x, true)),
         [typeof(string)] = new GenericTypeMapper<string>((x, tw) => tw.WriteEscapeSqLite(x, true))
     };
 

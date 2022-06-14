@@ -3,7 +3,6 @@
 public static class SqLiteTextWriterExtensions
 {
     private const string sqLiteQuote = "'";
-    private const string sqLiteStringStartQuote = "E'";
 
     public static void WriteSqLiteDateTime(this TextWriter textWriter, DateTime dateTime, bool quote)
     {
@@ -34,32 +33,29 @@ public static class SqLiteTextWriterExtensions
     {
         int maxLength = value.Length * 2;
 
-        ReadOnlySpan<char> startQuote = default;
-        ReadOnlySpan<char> endQuote = default;
+        ReadOnlySpan<char> quotes = default;
 
         if (quote)
         {
-            startQuote = sqLiteStringStartQuote.AsSpan();
-            endQuote = sqLiteQuote.AsSpan();
+            maxLength += (sqLiteQuote.Length * 2);
+            quotes = sqLiteQuote.AsSpan();
         }
-
-        maxLength += (startQuote.Length + endQuote.Length);
 
         Span<char> target = stackalloc char[maxLength];
 
-        if (TextWriterExtensionsHelper.TryQuote(
-                target,
-                (string source, Span<char> span, out int i) => source.AsSpan().TryEscapeSqLite(span, out i),
-                value,
-                startQuote,
-                endQuote,
-                out int written))
+        if(TextWriterExtensionsHelper.TryQuote(
+               target,
+               (string source, Span<char> span, out int i) => source.AsSpan().TryEscapeMysql(span, out i),
+               value,
+               quotes,
+               quotes,
+               out int written))
         {
             textWriter.WriteSpan(target.Slice(0, written));
         }
         else
         {
-            throw new FormatException($"Error by escape SqLite chars. Source length: {value.Length}. Target length: {target.Length}. Chars written: {written}");
+            throw new FormatException($"Error by escape Mysql chars. Source length: {value.Length}. Target length: {target.Length}. Chars written: {written}");
         }
     }
 
@@ -69,7 +65,7 @@ public static class SqLiteTextWriterExtensions
 
         if (quote)
         {
-            textWriter.Write(sqLiteStringStartQuote);
+            textWriter.Write(sqLiteQuote);
         }
 
         if (escaped == null)

@@ -18,27 +18,13 @@ public class SqLiteDatabaseAdapter : DatabaseAdapterBase
         [typeof(long)] = new GenericTypeMapper<long>((x, tw) => tw.Write(x)),
         [typeof(decimal)] = new GenericTypeMapper<decimal>((x, tw) => tw.Write(x.ToString(CultureInfo.InvariantCulture))),
         [typeof(DateTime)] = new GenericTypeMapper<DateTime>((x, tw) => tw.WriteSqLiteDateTime(x, true)),
-        [typeof(string)] = new GenericTypeMapper<string>((x, tw) => tw.WriteEscapeSqLite(x, true))
+        [typeof(string)] = new GenericTypeMapper<string>((x, tw) => tw.WriteEscapeSqLite(x, true)),
+        [typeof(Guid)] = new GenericTypeMapper<Guid>((x, tw) => tw.WriteGuid(x, true))
     };
 
     public SqLiteDatabaseAdapter()
         : base(TypeMappers)
     {
-    }
-
-    protected override void BuildInsertHeader<T>(
-        TextWriter textWriter,
-        ISqlBuilder sqlBuilder,
-        ExecutionFlags flags,
-        string[] propertiesToUpdate,
-        string constraintName)
-    {
-        base.BuildInsertHeader<T>(textWriter, sqlBuilder, flags, propertiesToUpdate, constraintName);
-
-        if ((flags & ExecutionFlags.IgnoreErrors) == ExecutionFlags.IgnoreErrors)
-        {
-            textWriter.Write(" IGNORE");
-        }
     }
 
     protected override void BuildInsertFooter<T>(

@@ -45,7 +45,7 @@ public static class SqLiteTextWriterExtensions
 
         if(TextWriterExtensionsHelper.TryQuote(
                target,
-               (string source, Span<char> span, out int i) => source.AsSpan().TryEscapeMysql(span, out i),
+               (string source, Span<char> span, out int i) => source.AsSpan().TryEscapeSqLite(span, out i),
                value,
                quotes,
                quotes,
@@ -55,7 +55,7 @@ public static class SqLiteTextWriterExtensions
         }
         else
         {
-            throw new FormatException($"Error by escape Mysql chars. Source length: {value.Length}. Target length: {target.Length}. Chars written: {written}");
+            throw new FormatException($"Error by escape SqLite chars. Source length: {value.Length}. Target length: {target.Length}. Chars written: {written}");
         }
     }
 

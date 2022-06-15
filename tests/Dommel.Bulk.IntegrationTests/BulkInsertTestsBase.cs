@@ -186,26 +186,25 @@ where TAllTypesEntity : class, IEntity
     [Fact]
     public async Task PrimaryKeyAndUniqueUpdateIfExistsErrorTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            await connection.DeleteAllAsync<Person>();
+        using IDbConnection connection = GetOpenConnection();
 
-            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(3).ToArray();
+        await connection.DeleteAllAsync<Person>();
 
-            persons[0].Id = 1;
-            persons[0].FirstName = "Hello";
-            persons[0].LastName = "world";
+        Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(3).ToArray();
 
-            persons[1].Id = 2;
+        persons[0].Id = 1;
+        persons[0].FirstName = "Hello";
+        persons[0].LastName = "world";
 
-            persons[2].Id = 2;
-            persons[2].FirstName = "Hello";
-            persons[2].LastName = "world";
+        persons[1].Id = 2;
 
-            await Assert.ThrowsAnyAsync<Exception>(() => connection.BulkInsertAsync(persons, flags: ExecutionFlags.InsertDatabaseGeneratedKeys | ExecutionFlags.UpdateIfExists));
+        persons[2].Id = 2;
+        persons[2].FirstName = "Hello";
+        persons[2].LastName = "world";
 
-            await connection.DeleteAllAsync<Person>();
-        }
+        await Assert.ThrowsAnyAsync<Exception>(() => connection.BulkInsertAsync(persons, flags: ExecutionFlags.InsertDatabaseGeneratedKeys | ExecutionFlags.UpdateIfExists));
+
+        await connection.DeleteAllAsync<Person>();
     }
 
     protected static void AssertPersonEqual(Person personFromDb, Person person)

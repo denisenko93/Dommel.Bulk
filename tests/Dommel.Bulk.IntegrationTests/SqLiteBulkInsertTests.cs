@@ -14,6 +14,8 @@ public class SqLiteBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>
 {
     public SqLiteBulkInsertTests()
     {
+        SqlMapper.AddTypeHandler(new GuidHandler());
+
         using IDbConnection connection = GetOpenConnection();
 
         connection.Execute($@"
@@ -194,5 +196,18 @@ CREATE TABLE string_value(
         {
             Assert.Equal(expected.DateTimeNull.Value, actual.DateTimeNull.Value, TimeSpan.FromSeconds(1));
         }
+    }
+
+    private class GuidHandler : SqliteTypeHandler<Guid>
+    {
+        public override Guid Parse(object value)
+            => Guid.Parse((string) value);
+    }
+
+    private abstract class SqliteTypeHandler<T> : SqlMapper.TypeHandler<T>
+    {
+        // Parameters are converted by Microsoft.Data.Sqlite
+        public override void SetValue(IDbDataParameter parameter, T value)
+            => parameter.Value = value;
     }
 }

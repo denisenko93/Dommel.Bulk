@@ -5,7 +5,7 @@ namespace Dommel.Bulk.Tests.Common;
 public static class FakeGenerators
 {
     public static readonly Faker<Person> PersonFaker = new Faker<Person>()
-            .RuleFor(x => x.Ref, Guid.NewGuid)
+            .RuleFor(x => x.Ref, _ => Guid.NewGuid())
             .RuleFor(x => x.FirstName, f => f.Person.FirstName)
             .RuleFor(x => x.LastName, f => f.Person.LastName)
             .RuleFor(x => x.Age, f => f.Person.Random.Number(100))

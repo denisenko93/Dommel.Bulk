@@ -23,7 +23,7 @@ Install-Package Dommel.Bulk
 ```cs
 var products = await connection.BulkInsertAsync<Product>(products);
 ```
-Generates simple SQL expression using database specific type mappers. Supports MySql and PostgreSql databases. Has high performance solutions inside.
+Generates simple SQL expression using database specific type mappers. Supports MySql, PostgreSql and SqLite databases. Has high performance solutions inside.
 
 ### Bulk insert using SQL parameters
 ```cs
@@ -69,7 +69,7 @@ Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sb
 All Dommel.Bulk methods have async and non-async variants, such as as `BulkInsert` & `BulkInsertAsync`, `BulkInsertParameters` & `BulkInsertParametersAsync`.
 
 ## Database adapters
-Represents a concrete implementation of a database abstraction. Supports MySql and PostgreSql implementations.
+Represents a concrete implementation of a database abstraction. Supports MySql, PostgreSql and SqLite implementations.
 
 ## Extensibility
 ### Type mapper

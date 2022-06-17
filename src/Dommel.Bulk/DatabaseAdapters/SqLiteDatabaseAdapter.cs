@@ -27,6 +27,21 @@ public class SqLiteDatabaseAdapter : DatabaseAdapterBase
     {
     }
 
+    protected override void BuildInsertHeader<T>(
+        TextWriter textWriter,
+        ISqlBuilder sqlBuilder,
+        ExecutionFlags flags,
+        string[] propertiesToUpdate,
+        string constraintName)
+    {
+        base.BuildInsertHeader<T>(textWriter, sqlBuilder, flags, propertiesToUpdate, constraintName);
+
+        if ((flags & ExecutionFlags.IgnoreErrors) == ExecutionFlags.IgnoreErrors)
+        {
+            textWriter.Write(" OR IGNORE");
+        }
+    }
+
     protected override void BuildInsertFooter<T>(
         TextWriter textWriter,
         ISqlBuilder sqlBuilder,
@@ -41,9 +56,12 @@ public class SqLiteDatabaseAdapter : DatabaseAdapterBase
         if (properties.Length > 0)
         {
             textWriter.WriteLine();
-            textWriter.Write("ON DUPLICATE KEY UPDATE ");
+            textWriter.Write("ON CONFLICT ");
+            textWriter.Write(sqlBuilder.QuoteIdentifier(constraintName));
+            textWriter.Write(" DO UPDATE SET ");
 
             bool isFirst = true;
+
             foreach (PropertyInfo propertyToUpdate in properties)
             {
                 if (isFirst)
@@ -58,9 +76,8 @@ public class SqLiteDatabaseAdapter : DatabaseAdapterBase
                 string columnName = Resolvers.Column(propertyToUpdate, sqlBuilder, false);
 
                 textWriter.Write(columnName);
-                textWriter.Write(" = VALUES(");
+                textWriter.Write(" = EXCLUDED.");
                 textWriter.Write(columnName);
-                textWriter.Write(")");
             }
         }
     }

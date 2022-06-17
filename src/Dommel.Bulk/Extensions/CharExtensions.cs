@@ -50,14 +50,10 @@ internal static class CharExtensions
     {
         return c switch
         {
+            (char) 26 => ZString,
             '\f' => FString,
             '\0' => ZeroString,
-            '\'' => QuoteString,
-            '\b' => BString,
-            '\n' => NString,
-            '\r' => RString,
-            '\t' => TString,
-            '\\' => SlashString,
+            '\'' => "\'\'",
             _ => null
         };
     }

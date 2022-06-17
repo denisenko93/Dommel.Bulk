@@ -81,7 +81,6 @@ CREATE TABLE string_value(
     [InlineData("\"")]
     [InlineData("\\n")]
     [InlineData("Hello\nworld")]
-    [InlineData("Hello\u001aworld")]
     [InlineData("\\¥Š₩∖﹨＼")]
     [InlineData("\"'`´ʹʺʻʼˈˊˋ˙̀́‘’‚′‵❛❜＇")]
     public async Task StringTest(string str)
@@ -126,7 +125,7 @@ CREATE TABLE string_value(
 
         await connection.InsertAsync(persons[0]);
 
-        await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: "name_unique");
+        await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: "(first_name, last_name)");
 
         IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
 

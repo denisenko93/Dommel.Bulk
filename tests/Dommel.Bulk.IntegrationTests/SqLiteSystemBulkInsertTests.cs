@@ -11,15 +11,17 @@ using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
 
-public class SqLiteBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>
+
+
+public class SqLiteSystemBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>
 {
-    public SqLiteBulkInsertTests()
+    public SqLiteSystemBulkInsertTests()
     {
         SqlMapper.AddTypeHandler(new GuidHandler());
 
-        foreach (IDbConnection connection in GetOpenConnections())
-        {
-            connection.Execute($@"
+        using IDbConnection connection = GetOpenConnection();
+
+        connection.Execute($@"
              drop table if exists people;
 drop table if exists AllTypesEntities;
 
@@ -81,8 +83,7 @@ CREATE TABLE UserLog (
     TimeStamp date not null
 );");
 
-            connection.Dispose();
-        }
+        connection.Dispose();
     }
 
     [Theory]
@@ -100,30 +101,29 @@ CREATE TABLE UserLog (
     [InlineData("\"'`´ʹʺʻʼˈˊˋ˙̀́‘’‚′‵❛❜＇")]
     public async Task StringTest(string str)
     {
-        foreach (IDbConnection connection in GetOpenConnections())
+        using IDbConnection connection = GetOpenConnection();
+
+        await connection.DeleteAllAsync<StringValue>();
+
+        StringValue[] stringValues =
         {
-            await connection.DeleteAllAsync<StringValue>();
-
-            StringValue[] stringValues =
+            new StringValue
             {
-                new StringValue
-                {
-                    Value = str
-                }
-            };
+                Value = str
+            }
+        };
 
-            await connection.BulkInsertAsync(stringValues);
+        await connection.BulkInsertAsync(stringValues);
 
-            IEnumerable<StringValue> stringValuesFromDb = await connection.GetAllAsync<StringValue>();
+        IEnumerable<StringValue> stringValuesFromDb = await connection.GetAllAsync<StringValue>();
 
-            Assert.Single(stringValuesFromDb);
+        Assert.Single(stringValuesFromDb);
 
-            Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
+        Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
 
-            await connection.DeleteAllAsync<StringValue>();
+        await connection.DeleteAllAsync<StringValue>();
 
-            connection.Dispose();
-        }
+        connection.Dispose();
     }
 
     [Theory]
@@ -134,38 +134,36 @@ CREATE TABLE UserLog (
     [InlineData("", "1lldepwodk[m[c//./dc=-==(    ,", "(    first_name  ,   last_name    )")]
     public async Task UniqueUpdateIfExistsTest(string firstName, string lastName, string constraintName)
     {
-        foreach (IDbConnection connection in GetOpenConnections())
-        {
-            await connection.DeleteAllAsync<Person>();
+        using IDbConnection connection = GetOpenConnection();
 
-            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
+        await connection.DeleteAllAsync<Person>();
 
-            persons[0].FirstName = firstName;
-            persons[0].LastName = lastName;
+        Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
 
-            persons[1].FirstName = firstName;
-            persons[1].LastName = lastName;
+        persons[0].FirstName = firstName;
+        persons[0].LastName = lastName;
 
-            await connection.InsertAsync(persons[0]);
+        persons[1].FirstName = firstName;
+        persons[1].LastName = lastName;
 
-            await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: constraintName);
+        await connection.InsertAsync(persons[0]);
 
-            IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
+        await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: constraintName);
 
-            Assert.Single(peopleFromDb);
+        IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
 
-            AssertPersonEqual(peopleFromDb.First(), persons[1]);
+        Assert.Single(peopleFromDb);
 
-            await connection.DeleteAllAsync<Person>();
+        AssertPersonEqual(peopleFromDb.First(), persons[1]);
 
-            connection.Dispose();
-        }
+        await connection.DeleteAllAsync<Person>();
+
+        connection.Dispose();
     }
 
-    protected override IEnumerable<IDbConnection> GetConnections()
+    protected override IDbConnection GetConnection()
     {
-        yield return new SqliteConnection(@"Data Source=C:\Users\Admin\DataGripProjects\Telemart\identifier.sqlite");
-        yield return new SQLiteConnection(@"Data Source=C:\Users\Admin\DataGripProjects\Telemart\identifier.sqlite;BinaryGUID=False;");
+        return new SQLiteConnection(@"Data Source=Databases\database.sqlite;BinaryGUID=False;");
     }
 
     protected override IReadOnlyCollection<SqLiteAllTypesEntity> GetAllFakeTypes()
@@ -242,7 +240,6 @@ CREATE TABLE UserLog (
 
     private abstract class SqliteTypeHandler<T> : SqlMapper.TypeHandler<T>
     {
-        // Parameters are converted by Microsoft.Data.Sqlite
         public override void SetValue(IDbDataParameter parameter, T value)
             => parameter.Value = value;
     }

@@ -1,5 +1,6 @@
-# Dommel.Bulk ⛓
-High performance insert data into database
+# Dommel.Bulk 🚢
+The highest performing library for bulk inserting into a relational database.
+Fast. Simple. Flexible.
 
 Dommel.Bulk provides a convenient API for bulk insert operations using extension methods on the `IDbConnection` interface. The SQL queries are generated based on your POCO entities. Dommel.Bulk translates you entities to SQL expressions. [Dapper](https://github.com/StackExchange/Dapper) is used for query execution and object mapping. [Dommel](https://github.com/henkmollema/Dommel) is used for table and column names conventions.
 
@@ -7,13 +8,9 @@ Dommel.Bulk provides a convenient API for bulk insert operations using extension
 
 Dommel.Bulk is available on [NuGet](https://www.nuget.org/packages/Dommel.Bulk).
 
-### Install using the .NET CLI:
 ```
 dotnet add package Dommel.Bulk
-```
 
-### Install using the NuGet Package Manager:
-```
 Install-Package Dommel.Bulk
 ```
 
@@ -41,7 +38,7 @@ using (IDbTransaction transaction = _connection.BeginTransaction())
     await _connection.BulkInsertAsync(data, transaction);
 }
 ```
-### ExecutionFlags
+### ExecutionFlags 🚩
 Dommel.Bulk supports flags that allow additional database functionality to control bulk insertion.
 
 | Flag | Description                         |
@@ -61,29 +58,69 @@ You can specify which properties to update if there are conflicts when inserting
 await _connection.BulkInsertAsync(data, null, default, null, flags: ExecutionFlags.IgnoreErrors, nameof(Person.FirstName), nameof(Person.LastName));
 ```
 
-## Type mappers
+## Type mappers 🗿
 Mapping C# Types to Database Type Literals
-Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `Guid`, `string`, `TimeSpan`, `byte[]`, `enum` and nullable types. For concrete type specification check sql provider.
+Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sbyte`, `short`, `uint`, `ulong`, `ushort`, `decimal`, `DateTime`, `Guid`, `string`, `TimeSpan`, `byte[]`, `enum` and nullable types. For concrete type specification check sql provider:
 
-## Async and non-async
-All Dommel.Bulk methods have async and non-async variants, such as as `BulkInsert` & `BulkInsertAsync`, `BulkInsertParameters` & `BulkInsertParametersAsync`.
+|  CLR type  | MySQL | PostgreSQL | SQLite | 
+|------------|-------|------------|--------|
+| `string`   |✅|✅|✅|
+| `int`   |✅|✅|✅|
+| `bool`   |✅|✅|✅|
+| `char`   |✅|✅|✅|
+| `double`   |✅|✅|✅|
+| `float`   |✅|✅|✅|
+| `decimal`   |✅|✅|✅|
+| `DateTime`   |✅|✅|⚠️|
+| `long`   |✅|✅|✅|
+| `byte`   |✅|✅|✅|
+| `Enum`   |✅|✅|✅|
+| `Guid`   |✅|✅|⚠️|
+| `byte[]`   |✅|🔜|✅|
+| `ArraySegment<Byte>`   |✅|🔜|🔜|
+|`short`   |✅|||
+|`sbyte`   |✅|||
+|`uint`   |✅|||
+|`ulong`   |✅|||
+|`ushort`   |✅|||
+|`TimeSpan`   |✅|||
+|`DateOnly`   |⚠️|||
+|`TimeOnly`   |⚠️|||
 
-## Database adapters
-Represents a concrete implementation of a database abstraction. Supports MySql, PostgreSql and SqLite implementations.
 
-## Extensibility
+|Emoji|Description| 
+|------------|-------|
+| ✅|full support|
+| ⚠️|support with constraints|
+| 🔜 |soon|
+
+▪️`TimeOnly` and `TimeOnly` exists only in .NET6
+
+▪️ `Guid` in SQLite should be implemented with custom handler. `SqlMapper.TypeHandler<T>`
+
+▪️ `DateTime` in SQLite currenlty supported only in text format.
+
+▪️ SQLite `ConstraintName` should contains conflict column names. `(first_name, last_name)`
+
+▪️ PostgreSQL `ConstraintName` should contains constraint name. `unique_user_key`
+
+
+## Async and non-async ⚙️
+All Dommel.Bulk methods have `async` and non-async variants, such as as `BulkInsert` & `BulkInsertAsync`, `BulkInsertParameters` & `BulkInsertParametersAsync`.
+
+## Extensibility ➿
 ### Type mapper
 Use the `AddTypeMapper()` method to register the custom type mapper.
 ```cs
 DommelBulkMapper.AddTypeMapper(typeof(MySqlConnection), new GenericTypeMapper<JsonElement>((e, tw) => tw.Write(e.ToString())));
 ```
-### Database adapter
+### Database adapter 🔗
 Use the `AddTypeMapper()` method to register the custom type mapper.
 ```csharp
 DommelBulkMapper.AddDatabaseAdapter(typeof(NpgsqlConnection), new NpgDatabaseAdapter());
 ```
 
-## Performance
+## Performance 🚀
 Performance comparison between bulk methods and `InsertAll` from [Dommel](https://github.com/henkmollema/Dommel) library
 ``` ini
 
@@ -106,5 +143,5 @@ Intel Core i5-7300HQ CPU 2.50GHz (Kaby Lake), 1 CPU, 4 logical and 4 physical co
 |            InsertAllBenchmarkAsync |            | 10000    |   107.21 s |   29.986 s |   19.834 s |       |  38000.0000 |   3000.0000 |         - |    114 MB |
 | InsertAllTransactionBenchmarkAsync |            | 10000    |    15.98 s |    1.354 s |    0.896 s |       |  37000.0000 |   1000.0000 |         - |    113 MB |
 
-## Disclaimer
+## Disclaimer ❗️
 The material embodied in this software is provided to you "as-is" and without warranty of any kind, express, implied or otherwise, including without limitation, any warranty of fitness for a particular purpose. In no event shall the Centers for Disease Control and Prevention (CDC) or the United States (U.S.) government be liable to you or anyone else for any direct, special, incidental, indirect or consequential damages of any kind, or any damages whatsoever, including without limitation, loss of profit, loss of use, savings or revenue, or the claims of third parties, whether or not CDC or the U.S. government has been advised of the possibility of such loss, however caused and on any theory of liability, arising out of or in connection with the possession, use or performance of this software.

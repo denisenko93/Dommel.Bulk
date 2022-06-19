@@ -2,7 +2,7 @@
 The highest performing library for bulk inserting into a relational database.
 Fast. Simple. Flexible.
 
-Dommel.Bulk provides a convenient API for bulk insert operations using extension methods on the `IDbConnection` interface. The SQL queries are generated based on your POCO entities. Dommel.Bulk translates you entities to SQL expressions. [Dapper](https://github.com/StackExchange/Dapper) is used for query execution and object mapping. [Dommel](https://github.com/henkmollema/Dommel) is used for table and column names conventions.
+Dommel.Bulk provides a convenient API for bulk insert operations using extension methods on the `IDbConnection` interface. The SQL queries are generated based on your POCO entities. Dommel.Bulk translates your entities to SQL expressions. [Dapper](https://github.com/StackExchange/Dapper) is used for query execution and object mapping. [Dommel](https://github.com/henkmollema/Dommel) is used for table and column names conventions.
 
 ## Installing Dommel.Bulk
 
@@ -14,7 +14,7 @@ dotnet add package Dommel.Bulk
 Install-Package Dommel.Bulk
 ```
 
-## Dommel.Bulk basic usage
+## Dommel.Bulk basic usage 🛸
 
 ### Bulk insert using type mappers
 ```cs
@@ -44,16 +44,16 @@ Dommel.Bulk supports flags that allow additional database functionality to contr
 | Flag | Description                         |
 |------|-------------------------------------|
 | `None`   | Does not use extended functionality |
-| `InsertDatabaseGeneratedKeys` | Insert auto increment keys into database |
-| `UpdateIfExists` | Update rows in database when they exist. This flag is enabled if `propertiesToUpdate` exists |
-| `IgnoreErrors` | Ignore duplicate keys or unique index errors |
+| `InsertDatabaseGeneratedKeys` | Inserts auto increment keys into database |
+| `UpdateIfExists` | Updates rows in database when they exist. This flag is enabled if `propertiesToUpdate` exists |
+| `IgnoreErrors` | Ignores duplicate keys or unique index errors |
 
 Example:
 ```csharp
 await _connection.BulkInsertAsync(data, flags: ExecutionFlags.IgnoreErrors);
 ```
 ### Properties to update
-You can specify which properties to update if there are conflicts when inserting.
+You can specify which properties to update if there are inserting conflicts.
 ```csharp
 await _connection.BulkInsertAsync(data, null, default, null, flags: ExecutionFlags.IgnoreErrors, nameof(Person.FirstName), nameof(Person.LastName));
 ```

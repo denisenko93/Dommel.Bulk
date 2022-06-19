@@ -19,7 +19,8 @@ public class SqLiteDatabaseAdapter : DatabaseAdapterBase
         [typeof(decimal)] = new GenericTypeMapper<decimal>((x, tw) => tw.Write(x.ToString(CultureInfo.InvariantCulture))),
         [typeof(DateTime)] = new GenericTypeMapper<DateTime>((x, tw) => tw.WriteSqLiteDateTime(x, true)),
         [typeof(string)] = new GenericTypeMapper<string>((x, tw) => tw.WriteEscapeSqLite(x, true)),
-        [typeof(Guid)] = new GenericTypeMapper<Guid>((x, tw) => tw.WriteGuid(x, true))
+        [typeof(Guid)] = new GenericTypeMapper<Guid>((x, tw) => tw.WriteGuid(x, true)),
+        [typeof(byte[])] = new GenericTypeMapper<byte[]>((x, tw) => tw.WriteSqLiteHexString(x, true))
     };
 
     public SqLiteDatabaseAdapter()
@@ -49,7 +50,12 @@ public class SqLiteDatabaseAdapter : DatabaseAdapterBase
         IEnumerable<PropertyInfo> propertiesToUpdate,
         string constraintName)
     {
-        var properties = propertiesToUpdate?.ToArray() ?? Array.Empty<PropertyInfo>();
+        PropertyInfo[] properties = propertiesToUpdate.ToArray();
+
+        if (properties.Length > 0 && string.IsNullOrEmpty(constraintName))
+        {
+            throw new InvalidOperationException($"To update values on conflicts {nameof(constraintName)} must be filled.");
+        }
 
         base.BuildInsertFooter<T>(textWriter, sqlBuilder, flags, properties, constraintName);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -16,9 +17,9 @@ public class SqLiteBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>
     {
         SqlMapper.AddTypeHandler(new GuidHandler());
 
-        using IDbConnection connection = GetOpenConnection();
-
-        connection.Execute($@"
+        foreach (IDbConnection connection in GetOpenConnections())
+        {
+            connection.Execute($@"
              drop table if exists people;
 drop table if exists AllTypesEntities;
 
@@ -60,6 +61,8 @@ create table AllTypesEntities(
                                  EnumNull int null,
                                  DateTime text not null,
                                  DateTimeNull text null,
+                                 ByteArray BLOB not null,
+                                 ByteArrayNull BLOB null,
                                  primary key(Id));
 
 drop table if exists string_value;
@@ -67,7 +70,19 @@ drop table if exists string_value;
 CREATE TABLE string_value(
                              id int,
                              value text not null,
-                             PRIMARY KEY(id));");
+                             PRIMARY KEY(id));
+
+drop table if exists UserLog;
+
+CREATE TABLE UserLog (
+    Ref text not null primary key ,
+    Increment int not null,
+    Name text not null,
+    TimeStamp date not null
+);");
+
+            connection.Dispose();
+        }
     }
 
     [Theory]
@@ -85,60 +100,72 @@ CREATE TABLE string_value(
     [InlineData("\"'`´ʹʺʻʼˈˊˋ˙̀́‘’‚′‵❛❜＇")]
     public async Task StringTest(string str)
     {
-        using IDbConnection connection = GetOpenConnection();
-
-        await connection.DeleteAllAsync<StringValue>();
-
-        StringValue[] stringValues = new[]
+        foreach (IDbConnection connection in GetOpenConnections())
         {
-            new StringValue
+            await connection.DeleteAllAsync<StringValue>();
+
+            StringValue[] stringValues =
             {
-                Value = str
-            }
-        };
+                new StringValue
+                {
+                    Value = str
+                }
+            };
 
-        await connection.BulkInsertAsync(stringValues);
+            await connection.BulkInsertAsync(stringValues);
 
-        IEnumerable<StringValue> stringValuesFromDb = await connection.GetAllAsync<StringValue>();
+            IEnumerable<StringValue> stringValuesFromDb = await connection.GetAllAsync<StringValue>();
 
-        Assert.Single(stringValuesFromDb);
+            Assert.Single(stringValuesFromDb);
 
-        Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
+            Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
 
-        await connection.DeleteAllAsync<StringValue>();
+            await connection.DeleteAllAsync<StringValue>();
+
+            connection.Dispose();
+        }
     }
 
-    [Fact]
-    public async Task UniqueUpdateIfExistsTest()
+    [Theory]
+    [InlineData("Hello", "world", "(first_name, last_name)")]
+    [InlineData("Ivan", "Petrov", "(first_name,last_name)")]
+    [InlineData("___()33./", "     ", "(first_name,last_name)")]
+    [InlineData("';;.'>::.    - .;;;", "  .//   ", "(first_name,   last_name)")]
+    [InlineData("", "1lldepwodk[m[c//./dc=-==(    ,", "(    first_name  ,   last_name    )")]
+    public async Task UniqueUpdateIfExistsTest(string firstName, string lastName, string constraintName)
     {
-        using IDbConnection connection = GetOpenConnection();
+        foreach (IDbConnection connection in GetOpenConnections())
+        {
+            await connection.DeleteAllAsync<Person>();
 
-        await connection.DeleteAllAsync<Person>();
+            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
 
-        Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
+            persons[0].FirstName = firstName;
+            persons[0].LastName = lastName;
 
-        persons[0].FirstName = "Hello";
-        persons[0].LastName = "world";
+            persons[1].FirstName = firstName;
+            persons[1].LastName = lastName;
 
-        persons[1].FirstName = "Hello";
-        persons[1].LastName = "world";
+            await connection.InsertAsync(persons[0]);
 
-        await connection.InsertAsync(persons[0]);
+            await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: constraintName);
 
-        await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: "(first_name, last_name)");
+            IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
 
-        IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
+            Assert.Single(peopleFromDb);
 
-        Assert.Single(peopleFromDb);
+            AssertPersonEqual(peopleFromDb.First(), persons[1]);
 
-        AssertPersonEqual(peopleFromDb.First(), persons[1]);
+            await connection.DeleteAllAsync<Person>();
 
-        await connection.DeleteAllAsync<Person>();
+            connection.Dispose();
+        }
     }
 
-    protected override IDbConnection GetConnection()
+    protected override IEnumerable<IDbConnection> GetConnections()
     {
-        return new SqliteConnection(@"Data Source=C:\Users\User1\DataGripProjects\default\identifier.sqlite");
+        yield return new SqliteConnection(@"Data Source=C:\Users\Admin\DataGripProjects\Telemart\identifier.sqlite");
+        yield return new SQLiteConnection(@"Data Source=C:\Users\Admin\DataGripProjects\Telemart\identifier.sqlite;BinaryGUID=False;");
     }
 
     protected override IReadOnlyCollection<SqLiteAllTypesEntity> GetAllFakeTypes()
@@ -156,8 +183,6 @@ CREATE TABLE string_value(
         Assert.Equal(expected.Ref, actual.Ref);
         Assert.Equal(expected.Int, actual.Int);
         Assert.Equal(expected.IntNull, actual.IntNull);
-        Assert.Equal(expected.Long, actual.Long);
-        Assert.Equal(expected.LongNull, actual.LongNull);
         Assert.Equal(expected.Decimal, actual.Decimal);
         Assert.Equal(expected.DecimalNull, actual.DecimalNull);
         Assert.True(Math.Abs(expected.Float - actual.Float) < 0.000001);
@@ -186,6 +211,8 @@ CREATE TABLE string_value(
         Assert.Equal(expected.StringNull, actual.StringNull);
         Assert.Equal(expected.Enum, actual.Enum);
         Assert.Equal(expected.EnumNull, actual.EnumNull);
+        Assert.Equal(expected.Long, actual.Long);
+        Assert.Equal(expected.LongNull, actual.LongNull);
         Assert.Equal(expected.DateTime, actual.DateTime, TimeSpan.FromSeconds(1));
         if (expected.DateTimeNull == null)
         {
@@ -194,6 +221,16 @@ CREATE TABLE string_value(
         else
         {
             Assert.Equal(expected.DateTimeNull.Value, actual.DateTimeNull.Value, TimeSpan.FromSeconds(1));
+        }
+
+        Assert.Contains(actual.ByteArray, x => expected.ByteArray.Contains(x));
+        if (expected.ByteArrayNull == null)
+        {
+            Assert.Null(actual.ByteArrayNull);
+        }
+        else
+        {
+            Assert.Contains(actual.ByteArrayNull!, x => expected.ByteArrayNull.Contains(x));
         }
     }
 

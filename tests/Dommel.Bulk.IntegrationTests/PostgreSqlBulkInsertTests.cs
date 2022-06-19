@@ -14,9 +14,9 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
 {
     public PostgreSqlBulkInsertTests()
     {
-         using (IDbConnection connection = GetOpenConnection())
-         {
-             connection.Execute($@"
+        foreach (IDbConnection connection in GetOpenConnections())
+        {
+            connection.Execute($@"
              drop table if exists ""people"";
              drop table if exists ""AllTypesEntities"";
 
@@ -67,8 +67,19 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
             CREATE TABLE ""string_value""(
                 ""id"" int generated always as identity,
                 ""value"" text not null,
-                PRIMARY KEY(""id""));");
-         }
+                PRIMARY KEY(""id""));
+
+drop table if exists UserLog;
+
+CREATE TABLE UserLog (
+    Ref text not null primary key ,
+    Increment int not null,
+    Name text not null,
+    TimeStamp timestamp not null
+);");
+
+            connection.Dispose();
+        }
     }
 
     [Theory]
@@ -87,7 +98,7 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
     [InlineData("\"'`´ʹʺʻʼˈˊˋ˙̀́‘’‚′‵❛❜＇")]
     public async Task StringTest(string str)
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<StringValue>();
 
@@ -108,13 +119,15 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
             Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
 
             await connection.DeleteAllAsync<StringValue>();
+
+            connection.Dispose();
         }
     }
 
     [Fact]
     public async Task UniqueUpdateIfExistsTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<Person>();
 
@@ -137,12 +150,14 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
             AssertPersonEqual(peopleFromDb.First(), persons[1]);
 
             await connection.DeleteAllAsync<Person>();
+
+            connection.Dispose();
         }
     }
 
-    protected override IDbConnection GetConnection()
+    protected override IEnumerable<IDbConnection> GetConnections()
     {
-        return new NpgsqlConnection("User ID=postgres;Password=postgres;Host=localhost;Port=5432;Database=test;");
+        yield return new NpgsqlConnection("User ID=postgres;Password=postgres;Host=localhost;Port=5432;Database=test;");
     }
 
     protected override IReadOnlyCollection<PostgreSqlAllTypesEntity> GetAllFakeTypes()

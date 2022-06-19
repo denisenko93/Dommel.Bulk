@@ -46,8 +46,11 @@ public class SqLiteAllTypesEntity : IEntity
 
     public DayOfWeek? EnumNull { get; set; }
 
-    // date and time types
     public DateTime DateTime { get; set; }
 
     public DateTime? DateTimeNull { get; set; }
+
+    public byte[] ByteArray { get; set; }
+
+    public byte[]? ByteArrayNull { get; set; }
 }

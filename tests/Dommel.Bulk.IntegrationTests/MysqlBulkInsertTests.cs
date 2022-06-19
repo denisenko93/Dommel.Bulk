@@ -14,7 +14,7 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
 {
     public MysqlBulkInsertTests()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             connection.Execute($@"
             drop table if exists people;
@@ -107,7 +107,17 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             CREATE TABLE string_value(
                 `id` int AUTO_INCREMENT,
                 `value` text not null,
-                PRIMARY KEY(`id`));");
+                PRIMARY KEY(`id`));
+
+drop table if exists UserLog;
+
+CREATE TABLE UserLog (
+    Ref text not null primary key ,
+    Increment int not null,
+    Name text not null,
+    TimeStamp datetime not null
+);");
+            connection.Dispose();
         }
     }
 
@@ -129,7 +139,7 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
     [InlineData("\"'`´ʹʺʻʼˈˊˋ˙̀́‘’‚′‵❛❜＇")]
     public async Task StringTest(string str)
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<StringValue>();
 
@@ -150,13 +160,15 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
 
             await connection.DeleteAllAsync<StringValue>();
+
+            connection.Dispose();
         }
     }
 
     [Fact]
     public async Task InsertPrimaryKeyTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<Person>();
 
@@ -165,13 +177,15 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             await connection.BulkInsertAsync(persons, flags: ExecutionFlags.InsertDatabaseGeneratedKeys);
 
             await connection.DeleteAllAsync<Person>();
+
+            connection.Dispose();
         }
     }
 
     [Fact]
     public async Task PrimaryKeyErrorTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<Person>();
 
@@ -183,13 +197,15 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             await Assert.ThrowsAnyAsync<Exception>(() => connection.BulkInsertAsync(persons, flags: ExecutionFlags.InsertDatabaseGeneratedKeys));
 
             await connection.DeleteAllAsync<Person>();
+
+            connection.Dispose();
         }
     }
 
     [Fact]
     public async Task PrimaryKeyIgnoreErrorsTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<Person>();
 
@@ -207,13 +223,15 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             AssertPersonEqual(peopleFromDb.First(), persons[0]);
 
             await connection.DeleteAllAsync<Person>();
+
+            connection.Dispose();
         }
     }
 
     [Fact]
     public async Task PrimaryKeyUpdateIfExistsTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<Person>();
 
@@ -231,13 +249,15 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             AssertPersonEqual(peopleFromDb.First(), persons[1]);
 
             await connection.DeleteAllAsync<Person>();
+
+            connection.Dispose();
         }
     }
 
     [Fact]
     public async Task PrimaryKeyAndUniqueUpdateIfExistsIgnoreErrorsTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (var connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<Person>();
 
@@ -265,13 +285,16 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             AssertPersonEqual(peopleFromDb.Skip(1).First(), persons[3]);
 
             await connection.DeleteAllAsync<Person>();
+
+            connection.Dispose();
         }
     }
+
 
     [Fact]
     public async Task UniqueUpdateIfExistsTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
+        foreach (IDbConnection connection in GetOpenConnections())
         {
             await connection.DeleteAllAsync<Person>();
 
@@ -292,12 +315,14 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
             AssertPersonEqual(peopleFromDb.First(), persons[1]);
 
             await connection.DeleteAllAsync<Person>();
+
+            connection.Dispose();
         }
     }
 
-    protected override IDbConnection GetConnection()
+    protected override IEnumerable<IDbConnection> GetConnections()
     {
-        return new MySqlConnection($"Server=localhost;Database=test;Uid=root;Pwd=root;UseAffectedRows=false;");
+        yield return new MySqlConnection($"Server=localhost;Database=test;Uid=root;Pwd=root;UseAffectedRows=false;");
     }
 
     protected override IReadOnlyCollection<MySqlAllTypesEntity> GetAllFakeTypes()

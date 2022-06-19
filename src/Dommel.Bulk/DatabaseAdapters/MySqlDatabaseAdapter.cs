@@ -61,7 +61,7 @@ public class MySqlDatabaseAdapter : DatabaseAdapterBase
         IEnumerable<PropertyInfo> propertiesToUpdate,
         string constraintName)
     {
-        var properties = propertiesToUpdate?.ToArray() ?? Array.Empty<PropertyInfo>();
+        PropertyInfo[] properties = propertiesToUpdate?.ToArray() ?? Array.Empty<PropertyInfo>();
 
         base.BuildInsertFooter<T>(textWriter, sqlBuilder, flags, properties, constraintName);
 

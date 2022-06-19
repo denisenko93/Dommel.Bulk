@@ -1,8 +1,9 @@
 ﻿namespace Dommel.Bulk.Extensions;
 
-public static class SqLiteTextWriterExtensions
+internal static class SqLiteTextWriterExtensions
 {
     private const string sqLiteQuote = "'";
+    private const string sqLiteHexHeader = "X'";
 
     public static void WriteSqLiteDateTime(this TextWriter textWriter, DateTime dateTime, bool quote)
     {
@@ -80,6 +81,38 @@ public static class SqLiteTextWriterExtensions
         if (quote)
         {
             textWriter.Write(sqLiteQuote);
+        }
+    }
+
+    public static void WriteSqLiteHexString(this TextWriter textWriter, Span<byte> bytes, bool quote)
+    {
+        ReadOnlySpan<char> startQuote = default;
+        ReadOnlySpan<char> endQuote = default;
+
+        int maxLength = bytes.Length * 2;
+
+        if (quote)
+        {
+            startQuote = sqLiteHexHeader.AsSpan();
+            endQuote = sqLiteQuote.AsSpan();
+        }
+
+        maxLength += (startQuote.Length + endQuote.Length);
+
+        Span<char> target = stackalloc char[maxLength];
+
+        if(TextWriterExtensionsHelper.TryQuoteSpan(target,
+               (Span<byte> source, Span<char> span, out int written) => source.TryWriteHexString(span, out written),
+               bytes,
+               startQuote,
+               endQuote,
+               out int charsWritten))
+        {
+            textWriter.WriteSpan(target.Slice(0, charsWritten));
+        }
+        else
+        {
+            throw new FormatException($"Error by escape SqLite chars. Source length: {bytes.Length}. Target length: {target.Length}. Chars written: {charsWritten}");
         }
     }
 }

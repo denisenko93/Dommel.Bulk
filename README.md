@@ -94,7 +94,7 @@ Support CLR types: `bool`, `byte`, `char`, `double`, `float`, `int`, `long`, `sb
 | ⚠️|support with constraints|
 | 🔜 |soon|
 
-▪️`TimeOnly` and `TimeOnly` exists only in .NET6
+▪️`TimeOnly` and `DateOnly` exist only in .NET6
 
 ▪️ `Guid` in SQLite should be implemented with custom handler. `SqlMapper.TypeHandler<T>`
 

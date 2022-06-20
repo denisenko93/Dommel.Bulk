@@ -115,13 +115,11 @@ public abstract class DatabaseAdapterBase : IDatabaseAdapter
 
         if (propertiesToUpdate?.Length > 0)
         {
-            propertyInfosToUpdate = propertiesToUse
-                .Where(x => propertiesToUpdate.Contains(x.Name));
+            propertyInfosToUpdate = propertiesToUse.Where(x => propertiesToUpdate.Contains(x.Name));
         }
         else if(hasUpdateFlag)
         {
-            propertyInfosToUpdate = propertiesToUse
-                .Where(x => keyProperties.All(y => y.Property != x));
+            propertyInfosToUpdate = propertiesToUse.Where(x => keyProperties.All(y => y.Property != x));
         }
         else
         {

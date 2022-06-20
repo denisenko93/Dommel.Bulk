@@ -4,13 +4,19 @@ namespace Dommel.Bulk.Tests.Common;
 
 public static class FakeGenerators
 {
+    public static readonly Faker<UserLog> UserLogFaker = new Faker<UserLog>()
+        .RuleFor(x => x.Increment, f => f.Random.Int())
+        .RuleFor(x => x.Ref, _ => Guid.NewGuid())
+        .RuleFor(x => x.Name, f => f.Random.String())
+        .RuleFor(x => x.TimeStamp, f => f.Date.Future());
+
     public static readonly Faker<Person> PersonFaker = new Faker<Person>()
-            .RuleFor(x => x.Ref, Guid.NewGuid)
-            .RuleFor(x => x.FirstName, f => f.Person.FirstName)
-            .RuleFor(x => x.LastName, f => f.Person.LastName)
-            .RuleFor(x => x.Age, f => f.Person.Random.Number(100))
-            .RuleFor(x => x.Gender, f => f.Person.Gender)
-            .RuleFor(x => x.BirthDay, f => f.Person.DateOfBirth);
+        .RuleFor(x => x.Ref, _ => Guid.NewGuid())
+        .RuleFor(x => x.FirstName, f => f.Person.FirstName)
+        .RuleFor(x => x.LastName, f => f.Person.LastName)
+        .RuleFor(x => x.Age, f => f.Person.Random.Number(100))
+        .RuleFor(x => x.Gender, f => f.Person.Gender)
+        .RuleFor(x => x.BirthDay, f => f.Person.DateOfBirth);
 
     public static readonly Faker<MySqlAllTypesEntity> MySqlTypesFaker = new Faker<MySqlAllTypesEntity>()
         .StrictMode(true)
@@ -64,6 +70,8 @@ public static class FakeGenerators
         .RuleFor(x => x.Ref, f => Guid.NewGuid())
         .RuleFor(x => x.Double, f => f.Random.Double())
         .RuleFor(x => x.DoubleNull, f => f.Random.Double().OrNull(f))
+        .RuleFor(x => x.Long, f => f.Random.Long())
+        .RuleFor(x => x.LongNull, f => f.Random.Long().OrNull(f))
         .RuleFor(x => x.Bool, f => f.Random.Bool())
         .RuleFor(x => x.BoolNull, f => f.Random.Bool().OrNull(f))
         .RuleFor(x => x.Char, f => f.Random.Char(max: '\uD7FF'))
@@ -74,4 +82,22 @@ public static class FakeGenerators
         .RuleFor(x => x.EnumNull, f => f.Random.Enum<DayOfWeek>().OrNull(f))
         .RuleFor(x => x.DateTime, f => f.Date.Recent())
         .RuleFor(x => x.DateTimeNull, f => f.Date.Future().OrNull(f));
+
+    public static readonly Faker<SqLiteAllTypesEntity> SqLiteTypesFaker = new Faker<SqLiteAllTypesEntity>()
+        .RuleFor(x => x.Id, f => Guid.NewGuid())
+        .RuleFor(x => x.Ref, f => Guid.NewGuid())
+        .RuleFor(x => x.Double, f => f.Random.Double())
+        .RuleFor(x => x.DoubleNull, f => f.Random.Double().OrNull(f))
+        .RuleFor(x => x.Bool, f => f.Random.Bool())
+        .RuleFor(x => x.BoolNull, f => f.Random.Bool().OrNull(f))
+        .RuleFor(x => x.Char, _ => '_')
+        .RuleFor(x => x.CharNull, _ => 'a')
+        .RuleFor(x => x.String, f => f.Random.String2(100, 200))
+        .RuleFor(x => x.StringNull, f => f.Random.String2(100, 200).OrNull(f))
+        .RuleFor(x => x.Enum, f => f.Random.Enum<DayOfWeek>())
+        .RuleFor(x => x.EnumNull, f => f.Random.Enum<DayOfWeek>().OrNull(f))
+        .RuleFor(x => x.DateTime, f => f.Date.Recent())
+        .RuleFor(x => x.DateTimeNull, f => f.Date.Future().OrNull(f))
+        .RuleFor(x => x.ByteArray, f => f.Random.Bytes(1000))
+        .RuleFor(x => x.ByteArrayNull, f => f.Random.Bytes(1000).OrNull(f));
 }

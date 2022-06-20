@@ -14,9 +14,9 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
 {
     public PostgreSqlBulkInsertTests()
     {
-         using (IDbConnection connection = GetOpenConnection())
-         {
-             connection.Execute($@"
+        using IDbConnection connection = GetOpenConnection();
+
+        connection.Execute($@"
              drop table if exists ""people"";
              drop table if exists ""AllTypesEntities"";
 
@@ -67,8 +67,18 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
             CREATE TABLE ""string_value""(
                 ""id"" int generated always as identity,
                 ""value"" text not null,
-                PRIMARY KEY(""id""));");
-         }
+                PRIMARY KEY(""id""));
+
+drop table if exists UserLog;
+
+CREATE TABLE UserLog (
+    Ref text not null primary key ,
+    Increment int not null,
+    Name text not null,
+    TimeStamp timestamp not null
+);");
+
+        connection.Dispose();
     }
 
     [Theory]
@@ -87,57 +97,59 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
     [InlineData("\"'`´ʹʺʻʼˈˊˋ˙̀́‘’‚′‵❛❜＇")]
     public async Task StringTest(string str)
     {
-        using (IDbConnection connection = GetOpenConnection())
+        using IDbConnection connection = GetOpenConnection();
+
+        await connection.DeleteAllAsync<StringValue>();
+
+        StringValue[] stringValues = new[]
         {
-            await connection.DeleteAllAsync<StringValue>();
-
-            StringValue[] stringValues = new[]
+            new StringValue
             {
-                new StringValue
-                {
-                    Value = str
-                }
-            };
+                Value = str
+            }
+        };
 
-            await connection.BulkInsertAsync(stringValues);
+        await connection.BulkInsertAsync(stringValues);
 
-            IEnumerable<StringValue> stringValuesFromDb = await connection.GetAllAsync<StringValue>();
+        IEnumerable<StringValue> stringValuesFromDb = await connection.GetAllAsync<StringValue>();
 
-            Assert.Single(stringValuesFromDb);
+        Assert.Single(stringValuesFromDb);
 
-            Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
+        Assert.Equal(stringValues.First().Value, stringValuesFromDb.First().Value);
 
-            await connection.DeleteAllAsync<StringValue>();
-        }
+        await connection.DeleteAllAsync<StringValue>();
+
+        connection.Dispose();
     }
 
     [Fact]
     public async Task UniqueUpdateIfExistsTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            await connection.DeleteAllAsync<Person>();
+        using IDbConnection connection = GetOpenConnection();
 
-            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
+        await connection.DeleteAllAsync<Person>();
 
-            persons[0].FirstName = "Hello";
-            persons[0].LastName = "world";
+        Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
 
-            persons[1].FirstName = "Hello";
-            persons[1].LastName = "world";
+        persons[0].FirstName = "Hello";
+        persons[0].LastName = "world";
 
-            await connection.InsertAsync(persons[0]);
+        persons[1].FirstName = "Hello";
+        persons[1].LastName = "world";
 
-            await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: "name_unique");
+        await connection.InsertAsync(persons[0]);
 
-            IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
+        await connection.BulkInsertAsync(persons.Skip(1), flags: ExecutionFlags.UpdateIfExists, constraintName: "name_unique");
 
-            Assert.Single(peopleFromDb);
+        IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
 
-            AssertPersonEqual(peopleFromDb.First(), persons[1]);
+        Assert.Single(peopleFromDb);
 
-            await connection.DeleteAllAsync<Person>();
-        }
+        AssertPersonEqual(peopleFromDb.First(), persons[1]);
+
+        await connection.DeleteAllAsync<Person>();
+
+        connection.Dispose();
     }
 
     protected override IDbConnection GetConnection()
@@ -155,21 +167,12 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
     protected override void AssertAllTypesEqual(PostgreSqlAllTypesEntity expected, PostgreSqlAllTypesEntity actual)
     {
         Assert.NotNull(actual);
-
         Assert.Equal(expected.Id, actual.Id);
         Assert.Equal(expected.Ref, actual.Ref);
-        // Assert.Equal(expected.Short, actual.Short);
-        // Assert.Equal(expected.ShortNull, actual.ShortNull);
-        // Assert.Equal(expected.UShort, actual.UShort);
-        // Assert.Equal(expected.UShortNull, actual.UShortNull);
         Assert.Equal(expected.Int, actual.Int);
         Assert.Equal(expected.IntNull, actual.IntNull);
-        // Assert.Equal(expected.UInt, actual.UInt);
-        // Assert.Equal(expected.UIntNull, actual.UIntNull);
         Assert.Equal(expected.Long, actual.Long);
         Assert.Equal(expected.LongNull, actual.LongNull);
-        // Assert.Equal(expected.ULong, actual.ULong);
-        // Assert.Equal(expected.ULongNull, actual.ULongNull);
         Assert.Equal(expected.Decimal, actual.Decimal);
         Assert.Equal(expected.DecimalNull, actual.DecimalNull);
         Assert.True(Math.Abs(expected.Float - actual.Float) < 0.000001);
@@ -190,8 +193,7 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
         {
             Assert.True(Math.Abs(expected.DoubleNull.Value - actual.DoubleNull.Value) < 0.000000000000001);
         }
-        // Assert.Equal(expected.Byte, actual.Byte);
-        // Assert.Equal(expected.ByteNull, actual.ByteNull);
+
         Assert.Equal(expected.Bool, actual.Bool);
         Assert.Equal(expected.BoolNull, actual.BoolNull);
         Assert.Equal(expected.Char, actual.Char);
@@ -209,17 +211,5 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
         {
             Assert.Equal(expected.DateTimeNull.Value, actual.DateTimeNull.Value, TimeSpan.FromSeconds(1));
         }
-        // Assert.True(expected.TimeSpan - actual.TimeSpan < TimeSpan.FromSeconds(1) && expected.TimeSpan - actual.TimeSpan > TimeSpan.FromSeconds(-1));
-        // Assert.True(expected.TimeSpanNull == actual.TimeSpanNull
-        //             || (expected.TimeSpanNull - actual.TimeSpanNull < TimeSpan.FromSeconds(1) && expected.TimeSpanNull - actual.TimeSpanNull > TimeSpan.FromSeconds(-1)));
-        // Assert.Contains(actual.ByteArray, x => expected.ByteArray.Contains(x));
-        // if (expected.ByteArrayNull == null)
-        // {
-        //     Assert.Null(actual.ByteArrayNull);
-        // }
-        // else
-        // {
-        //     Assert.Contains(actual.ByteArrayNull, x => expected.ByteArrayNull.Contains(x));
-        // }
     }
 }

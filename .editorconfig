@@ -9,11 +9,30 @@ indent_size = 4
 
 # Microsoft .NET properties
 csharp_new_line_before_members_in_object_initializers = false
+csharp_new_line_before_open_brace = accessors,anonymous_types,control_blocks,events,indexers,local_functions,methods,object_collection_array_initalizers,properties,types
 csharp_preferred_modifier_order = public, private, protected, internal, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async:suggestion
 csharp_space_after_cast = true
-csharp_style_var_elsewhere = true:suggestion
-csharp_style_var_for_built_in_types = true:suggestion
-csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
+dotnet_diagnostic.cs1570.severity = none
+dotnet_diagnostic.cs1571.severity = none
+dotnet_diagnostic.cs1572.severity = none
+dotnet_diagnostic.cs1573.severity = none
+dotnet_diagnostic.cs1574.severity = none
+dotnet_diagnostic.cs1580.severity = none
+dotnet_diagnostic.cs1581.severity = none
+dotnet_diagnostic.cs1584.severity = none
+dotnet_diagnostic.cs1587.severity = none
+dotnet_diagnostic.cs1589.severity = none
+dotnet_diagnostic.cs1590.severity = none
+dotnet_diagnostic.cs1591.severity = none
+dotnet_diagnostic.cs1592.severity = none
+dotnet_diagnostic.cs1710.severity = none
+dotnet_diagnostic.cs1711.severity = none
+dotnet_diagnostic.cs1712.severity = none
+dotnet_diagnostic.cs1723.severity = none
+dotnet_diagnostic.cs8603.severity = none
 dotnet_naming_rule.unity_serialized_field_rule.import_to_resharper = True
 dotnet_naming_rule.unity_serialized_field_rule.resharper_description = Unity serialized field
 dotnet_naming_rule.unity_serialized_field_rule.resharper_guid = 5f0fdb63-c892-4d2c-9324-15c80b22a7ef
@@ -38,25 +57,80 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggest
 
 # ReSharper properties
 resharper_autodetect_indent_settings = true
+resharper_blank_lines_after_block_statements = 0
+resharper_blank_lines_around_single_line_auto_property = 1
+resharper_braces_for_fixed = not_required
+resharper_braces_for_for = required
+resharper_braces_for_foreach = required
+resharper_braces_for_ifelse = required
+resharper_braces_redundant = false
+resharper_csharp_blank_lines_around_field = 0
+resharper_csharp_blank_lines_around_invocable = 0
+resharper_csharp_blank_lines_around_namespace = 0
+resharper_csharp_blank_lines_around_single_line_invocable = 1
+resharper_csharp_wrap_before_binary_opsign = true
+resharper_enforce_line_ending_style = true
+resharper_indent_preprocessor_if = do_not_change
+resharper_instance_members_qualify_declared_in = 
+resharper_keep_existing_attribute_arrangement = true
+resharper_object_creation_when_type_evident = explicitly_typed
+resharper_parentheses_non_obvious_operations = none, conditional_and, bitwise, bitwise_inclusive_or, bitwise_exclusive_or, shift, multiplicative, bitwise_and
+resharper_parentheses_redundancy_style = remove
+resharper_parentheses_same_type_operations = true
+resharper_place_attribute_on_same_line = false
+resharper_place_expr_method_on_single_line = true
+resharper_place_simple_embedded_statement_on_same_line = true
+resharper_place_simple_initializer_on_single_line = false
+resharper_remove_blank_lines_near_braces_in_declarations = false
+resharper_show_autodetect_configure_formatting_tip = false
 resharper_space_within_single_line_array_initializer_braces = false
 resharper_use_indent_from_vs = false
+resharper_wrap_lines = true
+resharper_wrap_object_and_collection_initializer_style = chop_always
 
 # ReSharper inspection severities
+resharper_arrange_object_creation_when_type_evident_highlighting = none
 resharper_arrange_redundant_parentheses_highlighting = hint
 resharper_arrange_this_qualifier_highlighting = hint
 resharper_arrange_type_member_modifiers_highlighting = hint
 resharper_arrange_type_modifiers_highlighting = hint
 resharper_built_in_type_reference_style_for_member_access_highlighting = hint
 resharper_built_in_type_reference_style_highlighting = hint
+resharper_class_never_instantiated_global_highlighting = none
+resharper_comment_typo_highlighting = none
+resharper_convert_to_primary_constructor_highlighting = none
+resharper_foreach_can_be_converted_to_query_using_another_get_enumerator_highlighting = none
+resharper_foreach_can_be_partly_converted_to_query_using_another_get_enumerator_highlighting = none
+resharper_identifier_typo_highlighting = none
+resharper_inconsistent_naming_highlighting = none
+resharper_invalid_xml_doc_comment_highlighting = none
+resharper_invert_if_highlighting = none
+resharper_loop_can_be_converted_to_query_highlighting = none
+resharper_markup_attribute_typo_highlighting = none
+resharper_merge_into_negated_pattern_highlighting = none
+resharper_possible_multiple_enumeration_highlighting = hint
 resharper_redundant_base_qualifier_highlighting = warning
+resharper_redundant_verbatim_prefix_highlighting = none
+resharper_redundant_verbatim_string_prefix_highlighting = none
+resharper_string_literal_typo_highlighting = none
 resharper_suggest_var_or_type_built_in_types_highlighting = hint
 resharper_suggest_var_or_type_elsewhere_highlighting = hint
 resharper_suggest_var_or_type_simple_types_highlighting = hint
+resharper_unnecessary_whitespace_highlighting = hint
+resharper_use_deconstruction_highlighting = none
 resharper_web_config_module_not_resolved_highlighting = warning
 resharper_web_config_type_not_resolved_highlighting = warning
 resharper_web_config_wrong_module_highlighting = warning
 
+# Standard properties
+max_line_length = 500
+
 [*.{appxmanifest,asax,ascx,aspx,axaml,build,cg,cginc,compute,cs,cshtml,dtd,fs,fsi,fsscript,fsx,hlsl,hlsli,hlslinc,master,ml,mli,nuspec,paml,razor,resw,resx,shader,skin,usf,ush,vb,xaml,xamlx,xoml,xsd}]
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+[*.{appxmanifest,asax,ascx,aspx,axaml,build,c,c++,cc,cginc,compute,cp,cpp,cs,cshtml,cu,cuh,cxx,dtd,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,master,mpp,mq4,mq5,mqh,nuspec,paml,razor,resw,resx,skin,tpp,usf,ush,vb,xaml,xamlx,xoml,xsd}]
 indent_style = space
 indent_size = 4
 tab_width = 4

@@ -45,4 +45,16 @@ internal static class CharExtensions
             _ => null
         };
     }
+
+    public static string? EscapeSqLite(this char c)
+    {
+        return c switch
+        {
+            (char) 26 => ZString,
+            '\f' => FString,
+            '\0' => ZeroString,
+            '\'' => "\'\'",
+            _ => null
+        };
+    }
 }

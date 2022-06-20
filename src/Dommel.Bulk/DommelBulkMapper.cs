@@ -10,10 +10,11 @@ namespace Dommel.Bulk;
 /// </summary>
 public static partial class DommelBulkMapper
 {
-    private static Dictionary<string, IDatabaseAdapter> DatabaseAdapters = new Dictionary<string, IDatabaseAdapter>(StringComparer.InvariantCultureIgnoreCase)
+    private static readonly Dictionary<string, IDatabaseAdapter> DatabaseAdapters = new Dictionary<string, IDatabaseAdapter>(StringComparer.InvariantCultureIgnoreCase)
     {
         ["MySqlConnection"] = new MySqlDatabaseAdapter(),
-        ["NpgsqlConnection"] = new PostgreSqlDatabaseAdapter()
+        ["NpgsqlConnection"] = new PostgreSqlDatabaseAdapter(),
+        ["SqliteConnection"] = new SqLiteDatabaseAdapter()
     };
 
     /// <summary>

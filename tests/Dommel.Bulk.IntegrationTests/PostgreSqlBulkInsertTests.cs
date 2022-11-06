@@ -69,14 +69,14 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
                 ""value"" text not null,
                 PRIMARY KEY(""id""));
 
-drop table if exists UserLog;
+            drop table if exists ""UserLog"";
 
-CREATE TABLE UserLog (
-    Ref text not null primary key ,
-    Increment int not null,
-    Name text not null,
-    TimeStamp timestamp not null
-);");
+            CREATE TABLE ""UserLog"" (
+                Ref text not null primary key ,
+                Increment int not null,
+                Name text not null,
+                TimeStamp timestamp not null
+            );");
 
         connection.Dispose();
     }

@@ -12,16 +12,11 @@ public abstract class BulkInsertTestsBase<TAllTypesEntity>
 where TAllTypesEntity : class, IEntity
 {
     private readonly IReadOnlyCollection<Person> _people;
-    private readonly IReadOnlyCollection<UserLog> _userLog;
 
     protected BulkInsertTestsBase()
     {
         _people = Enumerable.Range(0, 100)
             .Select(_ => FakeGenerators.PersonFaker.Generate())
-            .ToArray();
-
-        _userLog = Enumerable.Range(0, 100_000)
-            .Select(_ => FakeGenerators.UserLogFaker.Generate())
             .ToArray();
     }
 
@@ -94,18 +89,22 @@ where TAllTypesEntity : class, IEntity
         }
     }
 
-    [Fact]
+    [Fact(Skip = "Run manual")]
     public void BigDataBulkInsertTest()
     {
+        UserLog[] userLog = Enumerable.Range(0, 100_000)
+            .Select(_ => FakeGenerators.UserLogFaker.Generate())
+            .ToArray();
+
         using IDbConnection connection = GetOpenConnection();
 
         connection.DeleteAll<UserLog>();
 
-        connection.BulkInsert(_userLog);
+        connection.BulkInsert(userLog);
 
         UserLog[] userLogFromDb = connection.GetAll<UserLog>().ToArray();
 
-        Assert.Equal(userLogFromDb.Length, _userLog.Count);
+        Assert.Equal(userLogFromDb.Length, userLog.Length);
 
         connection.Dispose();
     }

@@ -7,7 +7,7 @@ public static class FakeGenerators
     public static readonly Faker<UserLog> UserLogFaker = new Faker<UserLog>()
         .RuleFor(x => x.Increment, f => f.Random.Int())
         .RuleFor(x => x.Ref, _ => Guid.NewGuid())
-        .RuleFor(x => x.Name, f => f.Random.String())
+        .RuleFor(x => x.Name, f => f.Random.String2(10000))
         .RuleFor(x => x.TimeStamp, f => f.Date.Future());
 
     public static readonly Faker<Person> PersonFaker = new Faker<Person>()

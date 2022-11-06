@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
 
-public class SqLiteMicrosoftBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>
+public class SqLiteMicrosoftBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>, IDisposable
 {
     public SqLiteMicrosoftBulkInsertTests()
     {
@@ -231,8 +231,9 @@ CREATE TABLE UserLog (
 
     private class GuidHandler : SqliteTypeHandler<Guid>
     {
-        public override Guid Parse(object value)
-            => Guid.Parse((string) value);
+        public override Guid Parse(object value) => value is Guid guid
+            ? guid
+            : Guid.Parse((string) value);
     }
 
     private abstract class SqliteTypeHandler<T> : SqlMapper.TypeHandler<T>
@@ -240,5 +241,10 @@ CREATE TABLE UserLog (
         // Parameters are converted by Microsoft.Data.Sqlite
         public override void SetValue(IDbDataParameter parameter, T value)
             => parameter.Value = value;
+    }
+
+    public void Dispose()
+    {
+        SqlMapper.ResetTypeHandlers();
     }
 }

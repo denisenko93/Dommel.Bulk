@@ -6,7 +6,8 @@
         <VersionPrefix>2.0.0</VersionPrefix>
         <VersionSuffix>beta</VersionSuffix>
         <PackageReleaseNotes>Added support for extended behavior when inserting data into a database.
-            Added limited support for PostgreSQL database</PackageReleaseNotes>
+Added support for PostgreSQL database.
+Added support for SqLite database</PackageReleaseNotes>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>10</LangVersion>

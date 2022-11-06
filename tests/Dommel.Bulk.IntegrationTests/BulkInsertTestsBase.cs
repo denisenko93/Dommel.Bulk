@@ -11,12 +11,17 @@ namespace Dommel.Bulk.IntegrationTests;
 public abstract class BulkInsertTestsBase<TAllTypesEntity>
 where TAllTypesEntity : class, IEntity
 {
-    private IReadOnlyCollection<Person> _people;
+    private readonly IReadOnlyCollection<Person> _people;
+    private readonly IReadOnlyCollection<UserLog> _userLog;
 
-    public BulkInsertTestsBase()
+    protected BulkInsertTestsBase()
     {
         _people = Enumerable.Range(0, 100)
             .Select(_ => FakeGenerators.PersonFaker.Generate())
+            .ToArray();
+
+        _userLog = Enumerable.Range(0, 100_000)
+            .Select(_ => FakeGenerators.UserLogFaker.Generate())
             .ToArray();
     }
 
@@ -28,30 +33,31 @@ where TAllTypesEntity : class, IEntity
 
     protected IDbConnection GetOpenConnection()
     {
-        var connection = GetConnection();
+        IDbConnection connection = GetConnection();
+
         connection.Open();
+
         return connection;
     }
 
     [Fact]
     public async Task BulkInsertTestAsync()
     {
-        TAllTypesEntity[] allTypesFromDb;
-
         IReadOnlyCollection<TAllTypesEntity> types = GetAllFakeTypes();
 
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            await connection.DeleteAllAsync<TAllTypesEntity>();
+        using IDbConnection connection = GetOpenConnection();
 
-            await connection.BulkInsertAsync(types);
+        await connection.DeleteAllAsync<TAllTypesEntity>();
 
-            allTypesFromDb = (await connection.GetAllAsync<TAllTypesEntity>()).ToArray();
-        }
+        await connection.BulkInsertAsync(types);
+
+        TAllTypesEntity[] allTypesFromDb = (await connection.GetAllAsync<TAllTypesEntity>()).ToArray();
+
+        connection.Dispose();
 
         foreach (TAllTypesEntity allTypesEntity in types)
         {
-            var allTypeFromDb = allTypesFromDb.First(x => x.Id == allTypesEntity.Id);
+            TAllTypesEntity allTypeFromDb = allTypesFromDb.First(x => x.Id == allTypesEntity.Id);
 
             AssertAllTypesEqual(allTypesEntity, allTypeFromDb);
         }
@@ -60,20 +66,19 @@ where TAllTypesEntity : class, IEntity
     [Fact]
     public void BulkInsertTest()
     {
-        Person[] peopleFromDb;
+        using IDbConnection connection = GetOpenConnection();
 
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            connection.DeleteAll<Person>();
+        connection.DeleteAll<Person>();
 
-            connection.BulkInsert(_people);
+        connection.BulkInsert(_people);
 
-            peopleFromDb = connection.GetAll<Person>().ToArray();
-        }
+        Person[] peopleFromDb = connection.GetAll<Person>().ToArray();
+
+        connection.Dispose();
 
         foreach (Person person in _people)
         {
-            var personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
+            Person personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
 
             Assert.NotNull(personFromDb);
 
@@ -90,24 +95,39 @@ where TAllTypesEntity : class, IEntity
     }
 
     [Fact]
+    public void BigDataBulkInsertTest()
+    {
+        using IDbConnection connection = GetOpenConnection();
+
+        connection.DeleteAll<UserLog>();
+
+        connection.BulkInsert(_userLog);
+
+        UserLog[] userLogFromDb = connection.GetAll<UserLog>().ToArray();
+
+        Assert.Equal(userLogFromDb.Length, _userLog.Count);
+
+        connection.Dispose();
+    }
+
+    [Fact]
     public async Task BulkInsertParametersTestAsync()
     {
-        TAllTypesEntity[] allTypesFromDb;
-
         IReadOnlyCollection<TAllTypesEntity> allTypes = GetAllFakeTypes();
 
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            await connection.DeleteAllAsync<TAllTypesEntity>();
+        using IDbConnection connection = GetOpenConnection();
 
-            await connection.BulkInsertParametersAsync(allTypes);
+        await connection.DeleteAllAsync<TAllTypesEntity>();
 
-            allTypesFromDb = (await connection.GetAllAsync<TAllTypesEntity>()).ToArray();
-        }
+        await connection.BulkInsertParametersAsync(allTypes);
+
+        TAllTypesEntity[] allTypesFromDb = (await connection.GetAllAsync<TAllTypesEntity>()).ToArray();
+
+        connection.Dispose();
 
         foreach (TAllTypesEntity allTypesEntity in allTypes)
         {
-            var allTypeFromDb = allTypesFromDb.First(x => x.Id == allTypesEntity.Id);
+            TAllTypesEntity allTypeFromDb = allTypesFromDb.First(x => x.Id == allTypesEntity.Id);
 
             AssertAllTypesEqual(allTypesEntity, allTypeFromDb);
         }
@@ -116,20 +136,19 @@ where TAllTypesEntity : class, IEntity
     [Fact]
     public void BulkInsertParametersTest()
     {
-        Person[] peopleFromDb;
+        using IDbConnection connection = GetOpenConnection();
 
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            connection.DeleteAll<Person>();
+        connection.DeleteAll<Person>();
 
-            connection.BulkInsertParameters(_people);
+        connection.BulkInsertParameters(_people);
 
-            peopleFromDb = connection.GetAll<Person>().ToArray();
-        }
+        Person[] peopleFromDb = connection.GetAll<Person>().ToArray();
+
+        connection.Dispose();
 
         foreach (Person person in _people)
         {
-            var personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
+            Person personFromDb = peopleFromDb.First(x => x.Ref == person.Ref);
 
             AssertPersonEqual(personFromDb, person);
         }
@@ -138,74 +157,77 @@ where TAllTypesEntity : class, IEntity
     [Fact]
     public async Task UniqueErrorTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            await connection.DeleteAllAsync<Person>();
+        using IDbConnection connection = GetOpenConnection();
 
-            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
+        await connection.DeleteAllAsync<Person>();
 
-            persons[0].FirstName = "Hello";
-            persons[0].LastName = "world";
+        Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
 
-            persons[1].FirstName = "Hello";
-            persons[1].LastName = "world";
+        persons[0].FirstName = "Hello";
+        persons[0].LastName = "world";
 
-            await Assert.ThrowsAnyAsync<Exception>(() => connection.BulkInsertAsync(persons));
+        persons[1].FirstName = "Hello";
+        persons[1].LastName = "world";
 
-            await connection.DeleteAllAsync<Person>();
-        }
+        await Assert.ThrowsAnyAsync<Exception>(() => connection.BulkInsertAsync(persons));
+
+        await connection.DeleteAllAsync<Person>();
+
+        connection.Dispose();
     }
 
     [Fact]
     public async Task UniqueIgnoreErrorsTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            await connection.DeleteAllAsync<Person>();
+        using IDbConnection connection = GetOpenConnection();
 
-            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
+        await connection.DeleteAllAsync<Person>();
 
-            persons[0].FirstName = "Hello";
-            persons[0].LastName = "world";
+        Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(2).ToArray();
 
-            persons[1].FirstName = "Hello";
-            persons[1].LastName = "world";
+        persons[0].FirstName = "Hello";
+        persons[0].LastName = "world";
 
-            await connection.BulkInsertAsync(persons, flags: ExecutionFlags.IgnoreErrors);
+        persons[1].FirstName = "Hello";
+        persons[1].LastName = "world";
 
-            IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
+        await connection.BulkInsertAsync(persons, flags: ExecutionFlags.IgnoreErrors);
 
-            Assert.Single(peopleFromDb);
+        IEnumerable<Person> peopleFromDb = await connection.GetAllAsync<Person>();
 
-            AssertPersonEqual(peopleFromDb.First(), persons[0]);
+        Assert.Single(peopleFromDb);
 
-            await connection.DeleteAllAsync<Person>();
-        }
+        AssertPersonEqual(peopleFromDb.First(), persons[0]);
+
+        await connection.DeleteAllAsync<Person>();
+
+        connection.Dispose();
     }
 
     [Fact]
     public async Task PrimaryKeyAndUniqueUpdateIfExistsErrorTest()
     {
-        using (IDbConnection connection = GetOpenConnection())
-        {
-            await connection.DeleteAllAsync<Person>();
+        using IDbConnection connection = GetOpenConnection();
 
-            Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(3).ToArray();
+        await connection.DeleteAllAsync<Person>();
 
-            persons[0].Id = 1;
-            persons[0].FirstName = "Hello";
-            persons[0].LastName = "world";
+        Person[] persons = FakeGenerators.PersonFaker.GenerateForever().Take(3).ToArray();
 
-            persons[1].Id = 2;
+        persons[0].Id = 1;
+        persons[0].FirstName = "Hello";
+        persons[0].LastName = "world";
 
-            persons[2].Id = 2;
-            persons[2].FirstName = "Hello";
-            persons[2].LastName = "world";
+        persons[1].Id = 2;
+        persons[2].Id = 2;
 
-            await Assert.ThrowsAnyAsync<Exception>(() => connection.BulkInsertAsync(persons, flags: ExecutionFlags.InsertDatabaseGeneratedKeys | ExecutionFlags.UpdateIfExists));
+        persons[2].FirstName = "Hello";
+        persons[2].LastName = "world";
 
-            await connection.DeleteAllAsync<Person>();
-        }
+        await Assert.ThrowsAnyAsync<Exception>(() => connection.BulkInsertAsync(persons, flags: ExecutionFlags.InsertDatabaseGeneratedKeys | ExecutionFlags.UpdateIfExists));
+
+        await connection.DeleteAllAsync<Person>();
+
+        connection.Dispose();
     }
 
     protected static void AssertPersonEqual(Person personFromDb, Person person)

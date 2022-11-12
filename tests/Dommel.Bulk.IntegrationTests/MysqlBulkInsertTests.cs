@@ -112,7 +112,7 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
 drop table if exists UserLog;
 
 CREATE TABLE UserLog (
-    Ref text not null primary key ,
+    Ref varchar(100) not null primary key ,
     Increment int not null,
     Name text not null,
     TimeStamp datetime not null

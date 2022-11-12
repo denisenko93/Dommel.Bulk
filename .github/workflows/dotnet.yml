@@ -10,12 +10,17 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+
+  ubuntu-build-test-publish_tests:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+       timezoneLinux: EEST
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:

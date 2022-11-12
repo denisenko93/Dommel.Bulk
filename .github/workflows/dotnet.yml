@@ -10,7 +10,25 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+
+  windows-build-test:
+  
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    - name: Test
+      run: dotnet test tests/Dommel.Bulk.Tests/Dommel.Bulk.Tests.csproj --no-build --verbosity normal --configuration Release --framework net6.0
+
+  ubuntu-build-test-publish_tests:
 
     runs-on: ubuntu-latest
 

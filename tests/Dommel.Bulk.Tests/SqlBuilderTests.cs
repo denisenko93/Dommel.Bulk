@@ -70,7 +70,7 @@ public class SqlBuilderTests
         SqlQuery query = _mySqlDatabaseAdapter.BuildBulkInsertQuery(_mySqlBuilder, rowMapper, _people, ExecutionFlags.None, Array.Empty<string>(), null);
 
         Assert.Equal(@"INSERT INTO `people` (`ref`, `first_name`, `last_name`, `gender`, `age`, `birth_day`) VALUES
-('971af92c-f70e-4916-99e0-03c916cf8b70', 'Marcos', 'Hilll', 0, 46, '1952-04-18 19:32:19.440141'),
+('971af92c-f70e-4916-99e0-03c916cf8b70', 'Marcos', 'Hilll', 0, 46, '1952-04-18 20:32:19.440141'),
 ('e2265ba5-1f21-47d6-8b01-567a36684e07', 'Johnny', 'Ankunding', 0, 40, '1989-04-08 00:15:03.419836');", query.Query);
     }
 
@@ -82,7 +82,7 @@ public class SqlBuilderTests
         SqlQuery sqlQuery = _postgresDatabaseAdapter.BuildBulkInsertQuery(_postgresSqlBuilder, rowMapper, _people, ExecutionFlags.None, Array.Empty<string>(), null);
 
         Assert.Equal(@"INSERT INTO ""people"" (""ref"", ""first_name"", ""last_name"", ""gender"", ""age"", ""birth_day"") VALUES
-('971af92c-f70e-4916-99e0-03c916cf8b70', E'Marcos', E'Hilll', 0, 46, '1952-04-18 19:32:19.440141'),
+('971af92c-f70e-4916-99e0-03c916cf8b70', E'Marcos', E'Hilll', 0, 46, '1952-04-18 20:32:19.440141'),
 ('e2265ba5-1f21-47d6-8b01-567a36684e07', E'Johnny', E'Ankunding', 0, 40, '1989-04-08 00:15:03.419836');", sqlQuery.Query);
     }
 
@@ -94,7 +94,7 @@ public class SqlBuilderTests
         SqlQuery sqlQuery = _sqLiteDatabaseAdapter.BuildBulkInsertQuery(_SqLiteBuilder, rowMapper, _people, ExecutionFlags.None, Array.Empty<string>(), null);
 
         Assert.Equal(@"INSERT INTO people (ref, first_name, last_name, gender, age, birth_day) VALUES
-('971af92c-f70e-4916-99e0-03c916cf8b70', 'Marcos', 'Hilll', 0, 46, '1952-04-18 19:32:19.440141'),
+('971af92c-f70e-4916-99e0-03c916cf8b70', 'Marcos', 'Hilll', 0, 46, '1952-04-18 20:32:19.440141'),
 ('e2265ba5-1f21-47d6-8b01-567a36684e07', 'Johnny', 'Ankunding', 0, 40, '1989-04-08 00:15:03.419836');", sqlQuery.Query);
     }
 

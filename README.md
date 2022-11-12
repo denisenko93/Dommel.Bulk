@@ -1,8 +1,12 @@
 # Dommel.Bulk 🚢
 
 [![.NET](https://github.com/MMaximus111/Dommel.Bulk/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/MMaximus111/Dommel.Bulk/actions/workflows/dotnet.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![NuGet version (SoftCircuits.Silk)](https://img.shields.io/nuget/v/Dommel.Bulk?color=blue&style=plastic?logoHeight=45)](https://www.nuget.org/packages/Dommel.Bulk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)]
+(https://opensource.org/licenses/MIT)
+[![NuGet version (SoftCircuits.Silk)](https://img.shields.io/nuget/v/Dommel.Bulk?color=blue&style=plastic?logoHeight=45)]
+(https://www.nuget.org/packages/Dommel.Bulk)
+[![codecov](https://codecov.io/gh/MMaximus111/Dommel.Bulk/branch/main/graph/badge.svg?token=FAIIC9CRXP)]
+(https://codecov.io/gh/MMaximus111/Dommel.Bulk)
 
 The highest performing library for bulk inserting into a relational database.
 Fast. Simple. Flexible.

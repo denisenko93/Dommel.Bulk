@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  ubuntu-build-test-publish_tests:
+  build-and-test:
 
     runs-on: ubuntu-latest
 

@@ -20,7 +20,7 @@ jobs:
     - name: Set Timezone
       uses: szenius/set-timezone@v1.0
       with:
-       timezoneLinux: EET
+       timezoneLinux: EEST
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:

@@ -33,7 +33,7 @@ jobs:
         compose-file: "./docker-compose.yml"
 
     - name: output sqlite
-      run: cd /root/db ; ls ; cd ../..
+      run: cd db ; ls ; cd ../..
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3

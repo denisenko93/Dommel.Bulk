@@ -53,7 +53,7 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
+      run: dotnet test -p:ParallelizeTestCollections=false --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

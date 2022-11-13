@@ -30,8 +30,4 @@
       <ProjectReference Include="..\Dommel.Bulk.Tests.Common\Dommel.Bulk.Tests.Common.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Remove="Databases\identifier.sqlite" />
-    </ItemGroup>
-
 </Project>

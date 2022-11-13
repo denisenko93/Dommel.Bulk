@@ -28,6 +28,7 @@ jobs:
     - uses: isbang/compose-action@v1.4.0  
       with:
         compose-file: "./docker-compose.yml"
+    - run: docker-compose up
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:

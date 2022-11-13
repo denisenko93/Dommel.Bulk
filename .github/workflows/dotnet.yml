@@ -32,8 +32,14 @@ jobs:
       with:
         compose-file: "./docker-compose.yml"
 
-    - name: output current directory
+    - name: Output root directory
       run: ls
+
+    - name: Output databases directory
+      run: ls ./Databases
+
+    - name: Grant permissions on SqLite
+      run: chmod 777 ./Databases/*.db
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3

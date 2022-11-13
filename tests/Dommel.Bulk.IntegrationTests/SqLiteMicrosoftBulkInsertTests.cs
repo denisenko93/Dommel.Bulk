@@ -160,7 +160,7 @@ CREATE TABLE UserLog (
 
     protected override IDbConnection GetConnection()
     {
-        return new SqliteConnection(@"Data Source=Databases\database.sqlite;");
+        return new SqliteConnection(@"Data Source=Databases\sqlite.db;");
     }
 
     protected override IReadOnlyCollection<SqLiteAllTypesEntity> GetAllFakeTypes()

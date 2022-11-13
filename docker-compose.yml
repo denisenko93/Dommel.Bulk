@@ -30,4 +30,4 @@ services:
     stdin_open: true
     tty: true
     volumes:
-    - ./db/:/root/db/
+      - ./Databases/sqlite.db:/root/db/database.db

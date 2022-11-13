@@ -32,9 +32,6 @@
 
     <ItemGroup>
       <None Remove="Databases\identifier.sqlite" />
-      <Content Include="Databases\database.sqlite">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
     </ItemGroup>
 
 </Project>

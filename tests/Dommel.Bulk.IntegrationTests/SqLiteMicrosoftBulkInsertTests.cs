@@ -81,6 +81,7 @@ CREATE TABLE UserLog (
 );");
 
         connection.Dispose();
+        SqlMapper.ResetTypeHandlers();
     }
 
     [Theory]

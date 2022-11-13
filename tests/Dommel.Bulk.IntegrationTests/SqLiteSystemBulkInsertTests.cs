@@ -6,12 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Dommel.Bulk.Tests.Common;
-using Microsoft.Data.Sqlite;
 using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
-
-
 
 public class SqLiteSystemBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>
 {
@@ -84,6 +81,7 @@ CREATE TABLE UserLog (
 );");
 
         connection.Dispose();
+        SqlMapper.ResetTypeHandlers();
     }
 
     [Theory]

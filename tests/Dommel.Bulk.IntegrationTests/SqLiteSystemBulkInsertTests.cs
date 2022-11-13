@@ -6,12 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Dommel.Bulk.Tests.Common;
-using Microsoft.Data.Sqlite;
 using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
-
-
 
 public class SqLiteSystemBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>
 {
@@ -163,7 +160,7 @@ CREATE TABLE UserLog (
 
     protected override IDbConnection GetConnection()
     {
-        return new SQLiteConnection(@"Data Source=Databases\database.sqlite;BinaryGUID=False;");
+        return new SQLiteConnection(@"Data Source=Databases\sqlite.db;BinaryGUID=False;");
     }
 
     protected override IReadOnlyCollection<SqLiteAllTypesEntity> GetAllFakeTypes()

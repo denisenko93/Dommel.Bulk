@@ -58,8 +58,8 @@ jobs:
    # - name: Test SqLite_MicrosoftProvider
    #  run: dotnet test --filter "FullyQualifiedName~SqLiteMicrosoft" --no-build --verbosity normal --configuration Release --framework net6.0
 
-    - name: Test SqLite_SystemProvider
-      run: dotnet test --filter "FullyQualifiedName~SqLiteSystem" --no-build --verbosity normal --configuration Release --framework net6.0
+   # - name: Test SqLite_SystemProvider
+   #   run: dotnet test --filter "FullyQualifiedName~SqLiteSystem" --no-build --verbosity normal --configuration Release --framework net6.0
 
     - name: Test MySql
       run: dotnet test --filter "FullyQualifiedName~Mysql" --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage

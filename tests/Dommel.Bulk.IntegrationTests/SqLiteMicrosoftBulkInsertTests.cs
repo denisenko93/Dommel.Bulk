@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
 
-[CollectionDefinition("SqLite", DisableParallelization = true)]
 public class SqLiteMicrosoftBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>, IDisposable
 {
     public SqLiteMicrosoftBulkInsertTests()
@@ -82,7 +81,6 @@ CREATE TABLE UserLog (
 );");
 
         connection.Dispose();
-        SqlMapper.ResetTypeHandlers();
     }
 
     [Theory]

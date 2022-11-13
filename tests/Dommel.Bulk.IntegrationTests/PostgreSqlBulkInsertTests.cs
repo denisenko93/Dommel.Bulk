@@ -79,6 +79,7 @@ public class PostgreSqlBulkInsertTests : BulkInsertTestsBase<PostgreSqlAllTypesE
             );");
 
         connection.Dispose();
+        SqlMapper.ResetTypeHandlers();
     }
 
     [Theory]

@@ -118,6 +118,7 @@ CREATE TABLE UserLog (
     TimeStamp datetime not null
 );");
         connection.Dispose();
+        SqlMapper.ResetTypeHandlers();
     }
 
     [Theory]

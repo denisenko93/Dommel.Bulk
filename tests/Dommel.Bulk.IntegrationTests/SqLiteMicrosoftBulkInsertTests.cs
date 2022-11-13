@@ -10,6 +10,7 @@ using Xunit;
 
 namespace Dommel.Bulk.IntegrationTests;
 
+[Collection("SqLite")]
 public class SqLiteMicrosoftBulkInsertTests : BulkInsertTestsBase<SqLiteAllTypesEntity>, IDisposable
 {
     public SqLiteMicrosoftBulkInsertTests()

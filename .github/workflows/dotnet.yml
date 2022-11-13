@@ -18,34 +18,34 @@ jobs:
     steps:
     - name: Checkout
     - uses: actions/checkout@v3
-    
+
     - name: Set Timezone
       uses: szenius/set-timezone@v1.0
       with:
        timezoneLinux: Europe/Kyiv
-       
+
     - name: Output host time
       run: date
 
     - name: Docker-Compose Up
-    - uses: isbang/compose-action@v1.4.0  
+      uses: isbang/compose-action@v1.4.0
       with:
         compose-file: "./docker-compose.yml"
-        
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
-        
+
     - name: Restore dependencies
       run: dotnet restore
-      
+
     - name: Build
       run: dotnet build --no-restore --configuration Release
-      
+
     - name: Test
       run: dotnet test tests/Dommel.Bulk.Tests/Dommel.Bulk.Tests.csproj --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
-      
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

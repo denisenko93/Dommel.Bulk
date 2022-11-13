@@ -52,8 +52,14 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
-    - name: Test
-      run: dotnet test -p:ParallelizeTestCollections=false --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
+    - name: Test PostgreSql
+      run: dotnet test --filter "FullyQualifiedName~Postgre" --no-build --verbosity normal --configuration Release --framework net6.0
+
+    - name: Test SqLite
+      run: dotnet test --filter "FullyQualifiedName~SqLite" --no-build --verbosity normal --configuration Release --framework net6.0
+
+    - name: Test MySql
+      run: dotnet test --filter "FullyQualifiedName~Mysql" --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

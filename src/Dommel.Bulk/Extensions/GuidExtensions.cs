@@ -16,7 +16,12 @@ internal static class GuidExtensions
 
         Span<byte> bytes = stackalloc byte[16];
 
-        MemoryMarshal.TryWrite(bytes, ref guid);
+#if NETSTANDARD2_0
+        MemoryMarshal.TryWrite(bytes,ref guid);
+#else
+        MemoryMarshal.TryWrite(bytes, guid);
+#endif
+
 
 #if BIGENDIAN
         BinaryExtensions.WriteHexString(bytes.Slice(0, 4), destination);

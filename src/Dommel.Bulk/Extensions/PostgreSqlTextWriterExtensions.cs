@@ -45,7 +45,9 @@ public static class PostgreSqlTextWriterExtensions
 
         maxLength += (startQuote.Length + endQuote.Length);
 
-        Span<char> target = stackalloc char[maxLength];
+        Span<char> target = maxLength > 1000
+            ? new char[maxLength]
+            : stackalloc char[maxLength];
 
         if (TextWriterExtensionsHelper.TryQuote(
                 target,

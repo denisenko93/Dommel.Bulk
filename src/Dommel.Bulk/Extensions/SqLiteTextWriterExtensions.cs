@@ -42,7 +42,9 @@ internal static class SqLiteTextWriterExtensions
             quotes = sqLiteQuote.AsSpan();
         }
 
-        Span<char> target = stackalloc char[maxLength];
+        Span<char> target = maxLength > 1000
+            ? new char[maxLength]
+            : stackalloc char[maxLength];
 
         if(TextWriterExtensionsHelper.TryQuote(
                target,
@@ -99,7 +101,9 @@ internal static class SqLiteTextWriterExtensions
 
         maxLength += (startQuote.Length + endQuote.Length);
 
-        Span<char> target = stackalloc char[maxLength];
+        Span<char> target = maxLength > 1000
+            ? new char[maxLength]
+            : stackalloc char[maxLength];
 
         if(TextWriterExtensionsHelper.TryQuoteSpan(target,
                (Span<byte> source, Span<char> span, out int written) => source.TryWriteHexString(span, out written),

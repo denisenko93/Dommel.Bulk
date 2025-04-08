@@ -97,10 +97,16 @@ public class MysqlBulkInsertTests : BulkInsertTestsBase<MySqlAllTypesEntity>
                 `TimeSpanNull` TIME(6) null,
 
                 `ByteArray` VARBINARY(1003) not null,
-                `ByteArrayNull` blob null,
+                `ByteArrayNull` blob null,"
+#if NET6_0_OR_GREATER
+                +@"`DateOnly` datetime(6) not null,
+                `DateOnlyNull` datetime(6) null,
 
+                `TimeOnly` TIME(6) not null,
+                `TimeOnlyNull` TIME(6) null,"
+#endif
 
-                primary key(Id));
+                +@"primary key(Id));
 
             drop table if exists `string_value`;
 

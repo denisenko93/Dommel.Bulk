@@ -29,7 +29,7 @@ public class MySqlDatabaseAdapter : DatabaseAdapterBase
         [typeof(ArraySegment<byte>)] = new GenericTypeMapper<ArraySegment<byte>>((x, tw) => tw.WriteMySqlHexString(x, true)),
         [typeof(byte[])] = new GenericTypeMapper<byte[]>((x, tw) => tw.WriteMySqlHexString(x, true)),
 #if NET6_0_OR_GREATER
-        [typeof(DateOnly)] = new GenericTypeMapper<DateOnly>((x, tw) => tw.WriteMysqlDateOnly(x, true)),
+        [typeof(DateOnly)] = new GenericTypeMapper<DateOnly>((x, tw) => tw.WriteMysqlDateTime(x.ToDateTime(TimeOnly.MinValue), true)),
         [typeof(TimeOnly)] = new GenericTypeMapper<TimeOnly>((x, tw) => tw.WriteMysqlTimeOnly(x, true)),
 #endif
     };

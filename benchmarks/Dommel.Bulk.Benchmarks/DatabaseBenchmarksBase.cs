@@ -6,7 +6,7 @@ using Dommel.Bulk.Tests.Common;
 namespace Dommel.Bulk.Benchmarks;
 
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory), CategoriesColumn]
-[SimpleJob(targetCount: 10)]
+[SimpleJob(launchCount: 10)]
 public abstract class DatabaseBenchmarksBase : SqlBuilderBenchmarks
 {
     private IDbConnection _connection;

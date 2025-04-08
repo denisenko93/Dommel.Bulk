@@ -1,6 +1,8 @@
 ﻿using System.Data;
 using System.Runtime.CompilerServices;
+using Dapper;
 using Dommel.Bulk.DatabaseAdapters;
+using Dommel.Bulk.TypeHandler;
 using Dommel.Bulk.TypeMap;
 
 namespace Dommel.Bulk;
@@ -10,6 +12,13 @@ namespace Dommel.Bulk;
 /// </summary>
 public static partial class DommelBulkMapper
 {
+#if NET6_0_OR_GREATER
+    static DommelBulkMapper()
+    {
+        SqlMapper.AddTypeHandler(typeof(TimeOnly), new TimeOnlyTypeHandler());
+    }
+#endif
+
     private static readonly Dictionary<string, IDatabaseAdapter> DatabaseAdapters = new Dictionary<string, IDatabaseAdapter>(StringComparer.InvariantCultureIgnoreCase)
     {
         ["MySqlConnection"] = new MySqlDatabaseAdapter(),

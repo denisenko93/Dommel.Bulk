@@ -15,6 +15,8 @@ public static partial class DommelBulkMapper
     /// <param name="entities">The entities to be inserted.</param>
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <param name="flags">flags enables extended behaviours</param>
+    /// <param name="constraintName">name of database unique index constraint</param>
+    /// <param name="chunkSize">max count of items allowed to insert in same query. 0 or null is disabled</param>
     /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
     public static int BulkInsertParameters<TEntity>(
@@ -23,10 +25,11 @@ public static partial class DommelBulkMapper
         IDbTransaction? transaction = null,
         ExecutionFlags flags = ExecutionFlags.None,
         string constraintName = null,
+        int? chunkSize = null,
         params string[] propertiesToUpdate)
         where TEntity : class
     {
-        return BulkInsert(connection, entities, transaction, _parametersRowMapper, flags, constraintName, propertiesToUpdate);
+        return BulkInsert(connection, entities, transaction, _parametersRowMapper, flags, constraintName, chunkSize, propertiesToUpdate);
     }
 
     /// <summary>
@@ -38,6 +41,8 @@ public static partial class DommelBulkMapper
     /// <param name="transaction">Optional transaction for the command.</param>
     /// <param name="cancellationToken">Optional cancellation token for the command.</param>
     /// <param name="flags">flags enables extended behaviours</param>
+    /// <param name="constraintName">name of database unique index constraint</param>
+    /// <param name="chunkSize">max count of items allowed to insert in same query. 0 or null is disabled</param>
     /// <param name="propertiesToUpdate">list of properties to update</param>
     /// <returns>The number of rows affected.</returns>
     public static Task<int> BulkInsertParametersAsync<TEntity>(
@@ -47,6 +52,7 @@ public static partial class DommelBulkMapper
         CancellationToken cancellationToken = default,
         ExecutionFlags flags = ExecutionFlags.None,
         string constraintName = null,
+        int? chunkSize = null,
         params string[] propertiesToUpdate)
         where TEntity : class
     {
@@ -58,6 +64,7 @@ public static partial class DommelBulkMapper
             _parametersRowMapper,
             flags,
             constraintName,
+            chunkSize,
             propertiesToUpdate);
     }
 

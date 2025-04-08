@@ -25,9 +25,3 @@ services:
 #    environment:
 #      ACCEPT_EULA: Y
 #      SA_PASSWORD: "Password."
-  sqlite:
-    image: nouchka/sqlite3:latest
-    stdin_open: true
-    tty: true
-    volumes:
-      - ./Databases/sqlite.db:/root/db/database.db

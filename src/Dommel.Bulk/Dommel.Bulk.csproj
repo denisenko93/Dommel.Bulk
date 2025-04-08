@@ -2,10 +2,9 @@
 
     <PropertyGroup>
         <PackageId>Dommel.Bulk</PackageId>
-        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
-        <VersionPrefix>2.0.2</VersionPrefix>
-        <VersionSuffix>beta</VersionSuffix>
-        <PackageReleaseNotes>Fix StackOverflow in escaping large text in mysql</PackageReleaseNotes>
+        <TargetFrameworks>netstandard2.0;net8.0;</TargetFrameworks>
+        <VersionPrefix>2.1.0</VersionPrefix>
+        <PackageReleaseNotes>Fix exception when put empty array; Add chanking support;</PackageReleaseNotes>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>10</LangVersion>
@@ -16,13 +15,8 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
-    <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-        <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
-        <PackageReference Include="System.Memory" Version="4.5.4" />
-    </ItemGroup>
-
     <ItemGroup>
-      <PackageReference Include="Dommel" Version="3.0.0" />
+      <PackageReference Include="Dommel" Version="3.3.4" />
     </ItemGroup>
 
     <ItemGroup>
@@ -37,8 +31,9 @@
         </AssemblyAttribute>
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Remove="TypeMap\QuotedTypeMapper.cs" />
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
+      <PackageReference Include="System.Memory" Version="4.6.3" />
     </ItemGroup>
 
 </Project>

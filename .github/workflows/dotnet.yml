@@ -1,0 +1,78 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build-and-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+       timezoneLinux: Europe/Kyiv
+
+    - name: Output host time
+      run: date
+
+    - name: Docker-Compose Up
+      uses: isbang/compose-action@v1.4.0
+      with:
+        compose-file: "./docker-compose.yml"
+
+    - name: Output root directory
+      run: ls
+
+    - name: Output databases directory
+      run: ls ./Databases
+
+    - name: Grant permissions on SqLite
+      run: sudo chmod 777 ./Databases/*.db
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test basic
+      run: dotnet test --filter "FullyQualifiedName~SqlBuilderTests" --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+    - name: Test PostgreSql
+      run: dotnet test --filter "FullyQualifiedName~Postgre" --no-build --verbosity normal --configuration Release --framework net6.0
+
+    - name: Test SqLite_MicrosoftProvider
+      run: dotnet test --filter "FullyQualifiedName~SqLiteMicrosoft" --no-build --verbosity normal --configuration Release --framework net6.0
+
+    - name: Test SqLite_SystemProvider
+      run: dotnet test --filter "FullyQualifiedName~SqLiteSystem" --no-build --verbosity normal --configuration Release --framework net6.0
+
+    - name: Test MySql
+      run: dotnet test --filter "FullyQualifiedName~Mysql" --no-build --verbosity normal --configuration Release --framework net6.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        directory: ./coverage
+        fail_ci_if_error: true
+        flags: unittests
+        name: codecov-umbrella
+        path_to_write_report: ./coverage/codecov_report.txt
+        verbose: true
